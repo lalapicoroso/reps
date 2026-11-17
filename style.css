@@ -213,3 +213,56 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
 .titulo { font-size: 28px; font-weight: 900; margin: 0 0 20px; }
 .vacio  { color: var(--muted); text-align: center; padding: 32px 0; line-height: 1.5; }
 .card.info { margin-bottom: 16px; }
+/* ── Lección 6 ── */
+
+/* Encabezado de sección: "Rutina" + "+ Agregar ejercicio" */
+.seccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 32px 0 4px;
+}
+.seccion h2 { margin: 0; font-size: 22px; font-weight: 900; }
+
+.link {
+  background: none;
+  border: 0;
+  color: var(--lime);
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+/* Título de cada día */
+.sec-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 20px 0 8px;
+}
+
+/* Tarjeta de ejercicio */
+.ej-info { flex: 1; min-width: 0; }
+.ejercicio h3 { font-size: 17px; }
+
+.card .presc {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--lime);
+  font-size: 13px;
+}
+
+.borrar {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+.borrar:hover { color: #ff7a6b; border-color: #ff7a6b; }
