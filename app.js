@@ -459,9 +459,9 @@ function tabProgreso() {
   }).join("");
 
   return `
-    <div class="stats">
-      <div class="stat"><div class="v">${fechas.length}</div><div class="k">Entrenamientos</div></div>
-      <div class="stat stat-ancha"><div class="v chica">${ultimaFecha}</div><div class="k">Último entrenamiento</div></div>
+      <div class="resumen-hoy">
+      <p><strong>${fechas.length}</strong> ${fechas.length === 1 ? "entrenamiento" : "entrenamientos"}</p>
+      <p>Última: <strong class="fecha">${ultimaFecha}</strong></p>
     </div>
 
     <h3 class="sec-title">Por ejercicio</h3>
@@ -669,7 +669,7 @@ function pantallaProgreso() {
   }
 
   const sesiones = [...historial].reverse().map(s => `
-    <div class="card sesion-hist">
+     <div class="card sesion-hist" data-accion="abrir-registro" data-fecha="${s.fecha}">
       <div class="sh-top">
         <h3>${fechaLarga(s.fecha)}</h3>
         ${record !== null && s.maxKg === record ? `<span class="pr">🏆 Récord</span>` : ""}
@@ -717,6 +717,7 @@ function render() {
   else if (vista === "editar")          html = pantallaEditar(alumnoActual);
   else if (vista === "nuevo-ejercicio") html = pantallaNuevoEjercicio();
   else if (vista === "sesion")          html = pantallaEntreno();
+  else if (vista === "registro")        html = pantallaRegistro();
   else if (vista === "progreso")        html = pantallaProgreso();
   else if (vista === "importar")        html = pantallaImportar();
   else if (vista === "editar-nutricion") html = pantallaEditarNutricion(alumnoActual);
@@ -1038,6 +1039,7 @@ async function cargarEjercicios() {
     .from("ejercicios")
     .select("*")
     .eq("alumno_id", alumnoActual.id)
+    .eq("activo", true)   // solo la rutina actual (los archivados quedan para el historial)
     .order("dia")
     .order("orden");
 

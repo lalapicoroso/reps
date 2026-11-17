@@ -365,8 +365,12 @@ function pantallaImportar() {
 
       ${imp.mensaje ? `<p class="error">${escapar(imp.mensaje)}</p>` : ""}
 
+      ${imp.rutina && ejercicios.length ? `
+        <p class="ayuda izq">La rutina del archivo <b>reemplaza</b> a la actual. Los ejercicios que ya no estén se archivan: su historial se conserva.</p>
+      ` : ""}
+
       <button class="btn" data-accion="ejecutar-import" ${listo ? "" : "disabled"}>
-        ${imp.importando ? "Importando…" : `Importar a ${alumnoActual.nombre}`}
+        ${imp.importando ? "Importando…" : imp.rutina && ejercicios.length ? "Reemplazar rutina e importar" : `Importar a ${alumnoActual.nombre}`}
       </button>
     </div>
   `;
@@ -406,6 +410,24 @@ document.addEventListener("click", async (evento) => {
   }
 
   if (boton.dataset.accion === "ejecutar-import") {
+    const imp = importacion;
+    // Si ya tiene rutina, primero confirmamos el reemplazo
+    if (imp.rutina && ejercicios.length) {
+      const diasAhora = Object.keys(agruparPorDia(ejercicios)).length;
+      const diasArchivo = new Set(imp.rutina.map(e => e.dia)).size;
+      pedirConfirmacion({
+        titulo: `¿Reemplazar la rutina de ${escapar(alumnoActual.nombre)}?`,
+        texto: `Actual: <strong>${diasAhora} ${diasAhora === 1 ? "día" : "días"} · ${ejercicios.length} ejercicios</strong><br>Archivo: <strong>${diasArchivo} ${diasArchivo === 1 ? "día" : "días"} · ${imp.rutina.length} ejercicios</strong><br><br>Los ejercicios que ya no estén se archivan: su historial y su progreso se conservan.`,
+        no: "Cancelar",
+        si: "Reemplazar e importar",
+        accion: "confirmar-import",
+      });
+    } else {
+      await ejecutarImportacion();
+    }
+  }
+
+  if (boton.dataset.accion === "confirmar-import") {
     await ejecutarImportacion();
   }
 });
@@ -423,30 +445,83 @@ async function ejecutarImportacion() {
 
   try {
     // ── A. Ejercicios ──
-    const porNombre = new Map(ejercicios.map(e => [claveEjercicio(e.nombre), e]));
-    const nuevos = [];
+    // Traemos TODOS sus ejercicios, también los archivados de fases anteriores
+    const todos = await db.from("ejercicios").select("*").eq("alumno_id", alumno.id);
+    if (todos.error) throw todos.error;
 
-    function agregar(dia, nombre, series, reps) {
-      const clave = claveEjercicio(nombre);
-      if (porNombre.has(clave)) return;
-      if (nuevos.some(n => claveEjercicio(n.nombre) === clave)) return;
-      nuevos.push({ alumno_id: alumno.id, dia, nombre, series, reps, orden: ejercicios.length + nuevos.length });
-    }
-
-    (imp.rutina || []).forEach(e => agregar(e.dia, e.nombre, e.series, e.reps));
-
-    const diasRutina = [...new Set((imp.rutina || []).map(e => e.dia))];
-    (imp.log || []).forEach(r => {
-      const mismas = imp.log.filter(x => claveEjercicio(x.ejercicio) === claveEjercicio(r.ejercicio));
-      const series = Math.min(10, Math.max(...mismas.map(x => x.serie)));
-      const dia = diasRutina.find(d => d === r.dia || d.startsWith(r.dia + " -")) || r.dia || "Importados";
-      agregar(dia, r.ejercicio, series, "");
+    const porNombre = new Map();
+    todos.data.forEach(e => {
+      const clave = claveEjercicio(e.nombre);
+      if (!porNombre.has(clave) || e.activo) porNombre.set(clave, e);   // si hay dos, gana el activo
     });
 
-    if (nuevos.length) {
-      const respuesta = await db.from("ejercicios").insert(nuevos).select();
-      if (respuesta.error) throw respuesta.error;
-      respuesta.data.forEach(e => porNombre.set(claveEjercicio(e.nombre), e));
+    let nuevos = 0, actualizados = 0, archivados = 0;
+
+    if (imp.rutina && imp.rutina.length) {
+      // REEMPLAZAR: la rutina del archivo pasa a ser la rutina activa
+      const enArchivo = new Set();
+      const aInsertar = [];
+
+      imp.rutina.forEach((e, i) => {
+        const clave = claveEjercicio(e.nombre);
+        if (enArchivo.has(clave)) return;   // repetido dentro del archivo
+        enArchivo.add(clave);
+        const datos = { dia: e.dia, series: e.series, reps: e.reps, orden: i, activo: true };
+        const existente = porNombre.get(clave);
+        if (existente) {
+          // Ya existía (activo o archivado): lo reusamos, así no pierde su historial
+          actualizados++;
+          aInsertar.push({ actualizar: existente.id, datos });
+        } else {
+          aInsertar.push({ datos: { ...datos, alumno_id: alumno.id, nombre: e.nombre } });
+        }
+      });
+
+      for (const item of aInsertar) {
+        if (item.actualizar) {
+          const r = await db.from("ejercicios").update(item.datos).eq("id", item.actualizar).select().single();
+          if (r.error) throw r.error;
+          porNombre.set(claveEjercicio(r.data.nombre), r.data);
+        }
+      }
+
+      const filasNuevas = aInsertar.filter(x => !x.actualizar).map(x => x.datos);
+      if (filasNuevas.length) {
+        const r = await db.from("ejercicios").insert(filasNuevas).select();
+        if (r.error) throw r.error;
+        r.data.forEach(e => porNombre.set(claveEjercicio(e.nombre), e));
+        nuevos = r.data.length;
+      }
+
+      // Los que estaban activos y no vienen en el archivo se ARCHIVAN (no se borran)
+      const viejos = todos.data.filter(e => e.activo && !enArchivo.has(claveEjercicio(e.nombre))).map(e => e.id);
+      if (viejos.length) {
+        const r = await db.from("ejercicios").update({ activo: false }).in("id", viejos);
+        if (r.error) throw r.error;
+        archivados = viejos.length;
+      }
+    }
+
+    // Ejercicios que aparecen en el historial (LOG) pero en ningún lado más
+    const diasRutina = [...new Set((imp.rutina || []).map(e => e.dia))];
+    const delLog = [];
+    (imp.log || []).forEach(r => {
+      const clave = claveEjercicio(r.ejercicio);
+      if (porNombre.has(clave) || delLog.some(n => claveEjercicio(n.nombre) === clave)) return;
+      const mismas = imp.log.filter(x => claveEjercicio(x.ejercicio) === clave);
+      const dia = diasRutina.find(d => d === r.dia || d.startsWith(r.dia + " -")) || r.dia || "Importados";
+      delLog.push({
+        alumno_id: alumno.id, dia, nombre: r.ejercicio, reps: "",
+        series: Math.min(10, Math.max(...mismas.map(x => x.serie))),
+        orden: 999,
+        activo: !imp.rutina,   // si reemplazaste la rutina, estos quedan archivados (solo historial)
+      });
+    });
+    if (delLog.length) {
+      const r = await db.from("ejercicios").insert(delLog).select();
+      if (r.error) throw r.error;
+      r.data.forEach(e => porNombre.set(claveEjercicio(e.nombre), e));
+      nuevos += r.data.length;
     }
 
     // ── B. Series del historial ──
@@ -501,15 +576,18 @@ async function ejecutarImportacion() {
     }
 
     // ── D. Listo ──
-    const partes = [`${nuevos.length} ejercicios`, `${seriesNuevas} series nuevas`];
-    if (nutricionImportada) partes.push("objetivos de nutrición");
+    const partes = [];
+    if (imp.rutina) partes.push(`rutina de ${new Set(imp.rutina.map(e => e.dia)).size} días`);
+    if (archivados) partes.push(`${archivados} ejercicios archivados`);
+    if (seriesNuevas) partes.push(`${seriesNuevas} series`);
+    if (nutricionImportada) partes.push("nutrición");
 
     importacion = nuevaImportacion();
     vista = "alumno";
     seccionAlumno = imp.rutina || imp.log ? "rutina" : "nutricion";
+    diaElegido = null;
     await cargarEjercicios();
-    aviso = `Importación lista: ${partes.join(", ")} ✓`;
-    render();
+    mostrarToast(`✓ Importado: ${partes.join(" · ") || "sin cambios"}`);
 
   } catch (e) {
     imp.importando = false;

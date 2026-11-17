@@ -82,7 +82,7 @@ async function retomarBorrador() {
 
   // Si venimos de Hoy, todavía no tenemos su rutina: la pedimos
   const respuesta = await db.from("ejercicios").select("*")
-    .eq("alumno_id", alumno.id).order("dia").order("orden");
+    .eq("alumno_id", alumno.id).eq("activo", true).order("dia").order("orden");
   if (respuesta.error) { alert("No se pudo cargar la rutina: " + respuesta.error.message); return; }
   ejercicios = respuesta.data;
 
@@ -189,7 +189,7 @@ function pantallaEntreno() {
     <div class="entreno" id="entreno">
       <div class="entreno-contexto">
         <span>${contexto}</span>
-        <span class="pasos"><b>${ejercicioIdx + 1} / ${total}</b>${pasos}</span>
+        <span class="pasos-ej"><b>${ejercicioIdx + 1} / ${total}</b>${pasos}</span>
       </div>
 
       <h1 class="titulo">${ej.nombre}</h1>

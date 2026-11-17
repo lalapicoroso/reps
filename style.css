@@ -829,11 +829,11 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .acciones-seccion + .chips-dias { margin-top: 16px; }
 /* ── Rediseño 4: Entrenamiento ── */
 .entreno-contexto { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; color: var(--lime); margin-bottom: 8px; }
-.pasos { display: inline-flex; align-items: center; gap: 4px; }
-.pasos b { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--text); margin-right: 4px; letter-spacing: 0; }
-.pasos i { display: block; width: 10px; height: 6px; border-radius: 3px; background: var(--line); }
-.pasos i.hecho { background: color-mix(in srgb, var(--lime) 55%, var(--line)); }
-.pasos i.actual { width: 22px; background: var(--lime); }
+.pasos-ej { display: inline-flex; align-items: center; gap: 4px; }
+.pasos-ej b { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--text); margin-right: 4px; letter-spacing: 0; }
+.pasos-ej i { display: block; width: 10px; height: 6px; border-radius: 3px; background: var(--line); }
+.pasos-ej i.hecho { background: color-mix(in srgb, var(--lime) 55%, var(--line)); }
+.pasos-ej i.actual { width: 22px; background: var(--lime); }
 
 .ultima-vez { background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
 .ultima-vez p { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); }
@@ -875,3 +875,17 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .card.borrador .borrador-tag { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--lime); }
 /* ── Rediseño 7: Perfil ── */
 .sec-title.zona-cuidado { margin: 16px 0 0; }
+/* ── Rediseño 8: Progreso y registros ── */
+.resumen-hoy strong.fecha { font-size: 15px; text-transform: capitalize; }
+.card.sesion-hist { cursor: pointer; position: relative; padding-right: 40px; }
+.card.sesion-hist::after { content: "›"; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 24px; }
+.card.sesion-hist:hover { border-color: color-mix(in srgb, var(--lime) 50%, var(--line)); }
+.card.sesion-ej + .ayuda { margin: 12px 0 20px; }
+/* Resumen: en una línea, alineado por la base del texto; si no entra, cada dato centrado en su línea */
+.resumen-hoy { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-around; gap: 6px 24px; }
+.resumen-hoy p { white-space: nowrap; }
+/* ── Rediseño 9: Importar ── */
+.card.encontrado { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+.fila-enc { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.fila-enc b { flex: none; }
+.fila-enc span { text-align: right; }
