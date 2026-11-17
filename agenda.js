@@ -53,7 +53,7 @@ function sinTildes(texto) {
 }
 
 function hora(iso) {
-  return new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 // ¿Qué alumno aparece en el título del evento?

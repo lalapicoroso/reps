@@ -763,3 +763,6 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .btn-chico:disabled { opacity: 0.5; }
 
 .ayuda.izq { text-align: left; margin: -4px 0 10px; }
+/* Aire entre la agenda y las estadísticas de Actividad */
+.lista + .stats,
+.vacio + .stats { margin-top: 24px; }
