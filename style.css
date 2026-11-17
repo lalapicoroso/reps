@@ -704,4 +704,7 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
   outline: none;
 }
 .form textarea:focus { border-color: var(--lime); }
-.card.nutri { margin-bottom: 12px; }
+
+/* Espaciado parejo: 12px entre todas las tarjetas */
+.card.nutri { margin-bottom: 12px; }   /* el anillo está fuera de la lista */
+.lista .card.info { margin-bottom: 0; } /* adentro de una lista, el gap ya separa */
