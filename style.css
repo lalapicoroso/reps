@@ -1,11 +1,15 @@
 /* 1. Variables: igual que las variables de color en Figma */
 :root {
+  /* Colores: Volt es el tema base. temas.js los cambia según la paleta elegida */
   --bg: #0c0e0b;
   --surface: #151913;
+  --surface2: #1c2119;
   --line: #272d22;
   --text: #eef2e8;
   --muted: #8d967f;
-  --lime: #c6f432;
+  --lime: #c6f432;   /* color de acento */
+  --ink: #0c0e0b;    /* texto sobre el acento: botones, avatar, segmento activo */
+  --danger: #ff7a6b; /* errores y acciones de borrar */
   --radius: 16px;
 }
 
@@ -66,7 +70,7 @@ body {
   height: 48px;
   border-radius: 14px;
   background: var(--lime);
-  color: var(--bg);
+  color: var(--ink);
   font-weight: 900;
   font-size: 20px;
   display: grid;
@@ -184,14 +188,14 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
 
 .dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.error { color: #ff7a6b; font-size: 14px; margin: 0; }
+.error { color: var(--danger); font-size: 14px; margin: 0; }
 .error:empty { display: none; }   /* si no hay mensaje, no ocupa lugar */
 
 /* Botones */
 .btn {
   width: 100%;
   background: var(--lime);
-  color: var(--bg);
+  color: var(--ink);
   border: 0;
   border-radius: 12px;
   padding: 15px;
@@ -265,7 +269,7 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
   font-size: 14px;
   cursor: pointer;
 }
-.borrar:hover { color: #ff7a6b; border-color: #ff7a6b; }
+.borrar:hover { color: var(--danger); border-color: var(--danger); }
 /* ── Lección 7 ── */
 
 /* Encabezado de cada día con botón Entrenar */
@@ -279,7 +283,7 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
 
 .entrenar {
   background: var(--lime);
-  color: var(--bg);
+  color: var(--ink);
   border: 0;
   border-radius: 999px;
   padding: 7px 14px;
@@ -428,7 +432,7 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 }
 .stat .v { font-size: 24px; font-weight: 900; line-height: 1.1; }
 .stat .v.sube { color: var(--lime); }
-.stat .v.baja { color: #ff7a6b; }
+.stat .v.baja { color: var(--danger); }
 .stat .k { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
 
 /* Gráfico */
@@ -533,7 +537,7 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 }
 .segmentado button.on {
   background: var(--lime);
-  color: var(--bg);
+  color: var(--ink);
 }
 
 /* Encabezado compacto del alumno */
@@ -567,8 +571,8 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .card.info .email { word-break: break-all; font-size: 16px; }
 .btn.peligro {
   background: none;
-  color: #ff7a6b;
-  border: 1px solid color-mix(in srgb, #ff7a6b 40%, var(--line));
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--line));
 }
 .version { text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
 /* ── Lección 11: Importar ── */
@@ -608,8 +612,8 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 
 .carga.ok { border-style: solid; border-color: color-mix(in srgb, var(--lime) 50%, var(--line)); }
 .carga.ok .carga-estado { color: var(--lime); font-weight: 700; }
-.carga.mal { border-color: #ff7a6b; }
-.carga.mal .carga-estado { color: #ff7a6b; }
+.carga.mal { border-color: var(--danger); }
+.carga.mal .carga-estado { color: var(--danger); }
 
 /* Vista previa */
 .card.previa { display: block; }
@@ -748,7 +752,7 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
   border-radius: 999px;
   padding: 7px 12px;
   background: var(--lime);
-  color: var(--bg);
+  color: var(--ink);
   font: inherit;
   font-size: 13px;
   font-weight: 800;
@@ -766,3 +770,20 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 /* Aire entre la agenda y las estadísticas de Actividad */
 .lista + .stats,
 .vacio + .stats { margin-top: 24px; }
+/* ── Rediseño 1: Apariencia (temas) ── */
+.card.fila-link { width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.card.fila-link .chev { color: var(--muted); font-size: 22px; }
+
+.temas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tema { display: flex; flex-direction: column; gap: 10px; padding: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.tema.on { border: 2px solid var(--lime); padding: 9px; }
+.tema-muestra { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 10px; }
+.tema-card { display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 6px; }
+.tema-linea { display: block; width: 60%; height: 6px; border-radius: 3px; }
+.tema-linea.corta { width: 50%; height: 4px; opacity: 0.8; }
+.tema-punto { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.tema-boton { display: block; height: 14px; border-radius: 5px; }
+.tema-nombre { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.tema-nombre strong { font-size: 15px; font-weight: 800; }
+.tema-nombre small { font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.tema.on .tema-nombre small { color: var(--lime); }

@@ -373,6 +373,10 @@ function pantallaAjustes() {
     <h1 class="titulo">Ajustes</h1>
     <div class="lista">
       <div class="card info"><div><p>Cuenta</p><h3 class="email">${usuario ? usuario.email : ""}</h3></div></div>
+          <button class="card info fila-link" type="button" data-accion="abrir-apariencia">
+        <div><p>Apariencia</p><h3>${TEMAS[temaActual].nombre}</h3></div>
+        <span class="chev">›</span>
+      </button>
       <div class="card info"><div><p>Alumnos</p><h3>${alumnos.length}</h3></div></div>
       <button class="btn peligro" data-accion="salir">Cerrar sesión</button>
     </div>
@@ -726,6 +730,7 @@ function render() {
   else if (vista === "importar")        html = pantallaImportar();
   else if (vista === "editar-nutricion") html = pantallaEditarNutricion(alumnoActual);
   else if (vista === "editar-ejercicio") html = pantallaEditarEjercicio(ejercicioActual);
+  else if (vista === "apariencia")      html = pantallaApariencia();
   else                                  html = pantallaInicio();
 
   // Agregamos la tab bar al final, solo donde corresponde
