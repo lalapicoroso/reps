@@ -621,12 +621,6 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 /* Un poco más de margen a los costados para todos */
 .tabbar { padding-left: 14px; padding-right: 14px; }
 
-/* Solo en la app instalada (standalone) y solo en iPhone/iPad:
-   - "display-mode: standalone" = abierta desde el ícono, no desde Safari
-   - "-webkit-touch-callout" solo existe en iOS → así no afecta a Android ni a la compu */
-@media (display-mode: standalone) {
-  @supports (-webkit-touch-callout: none) {
-    .tabbar { padding-bottom: 30px; }
-    .espacio-tabbar { height: 110px; }
-  }
-}
+/* Solo en la app instalada en iPhone (la clase la pone index.html) */
+.app-ios .tabbar { padding-bottom: 30px; }
+.app-ios .espacio-tabbar { height: 110px; }
