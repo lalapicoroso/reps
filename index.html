@@ -2,17 +2,36 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- viewport-fit=cover: usa toda la pantalla, incluso debajo del notch -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Reps</title>
+
+  <!-- ── PWA ── -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0c0e0b">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+
+  <!-- iPhone: ícono, pantalla completa y barra de estado -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reps">
+
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
-  <!-- Acá adentro JavaScript va a dibujar las pantallas -->
   <div class="wrap" id="app"></div>
 
-  <!-- Conecta nuestro archivo de JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=8"></script>
+
+  <!-- Activa el service worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
 </body>
 </html>
