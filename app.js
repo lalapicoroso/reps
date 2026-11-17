@@ -315,8 +315,8 @@ function pantallaInicio() {
 
 // ── Actividad: quién entrenó y cuándo ──
 function pantallaActividad() {
-  const titulo = `<h1 class="titulo">Actividad</h1>`;
-
+  const titulo = `<h1 class="titulo">Actividad</h1>` + seccionAgenda();
+  
   if (cargandoActividad) {
     return titulo + `<p class="subtitulo">Cargando actividad…</p>`;
   }
