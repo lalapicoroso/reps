@@ -787,3 +787,29 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .tema-nombre strong { font-size: 15px; font-weight: 800; }
 .tema-nombre small { font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; }
 .tema.on .tema-nombre small { color: var(--lime); }
+/* ── Rediseño 2: Hoy ── */
+.resumen-hoy { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; }
+.resumen-hoy p { margin: 0; color: var(--muted); font-size: 14px; }
+.resumen-hoy strong { color: var(--text); font-size: 20px; font-weight: 900; margin-right: 4px; }
+
+.card.turno .turno-texto { flex: 1; min-width: 0; }
+
+.card.sin-asignar { display: flex; flex-direction: column; align-items: stretch; gap: 10px; border-style: dashed; border-color: color-mix(in srgb, var(--lime) 45%, var(--line)); }
+.card.sin-asignar h3 { margin: 0; }
+.card.sin-asignar p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.card.sin-asignar p strong { color: var(--text); }
+.acciones-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.acciones-fila .btn-chico { padding: 10px 12px; font-size: 14px; }
+.card.sin-asignar .link.chico { align-self: flex-start; }
+
+.lista + .agenda-top { margin-top: 24px; }
+
+/* Toast: aparece abajo, arriba de la tab bar, y se va solo */
+.toast { position: fixed; left: 16px; right: 16px; bottom: 96px; z-index: 30; max-width: 608px; margin: 0 auto; background: var(--surface2); border: 1px solid var(--lime); border-radius: 14px; padding: 14px 16px; font-weight: 700; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); animation: toast 3.2s ease forwards; pointer-events: none; }
+.app-ios .toast { bottom: 118px; }
+@keyframes toast {
+  0%   { opacity: 0; transform: translateY(12px); }
+  8%   { opacity: 1; transform: translateY(0); }
+  85%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(12px); }
+}

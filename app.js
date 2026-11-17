@@ -222,12 +222,12 @@ function miniGrafico(sesiones) {
 function tabbar() {
   // ¿Qué pestaña se marca? Todo lo de alumnos cuenta como "alumnos"
   let activa = "alumnos";
-  if (vista === "actividad") activa = "actividad";
+  if (vista === "actividad" || vista === "actividad-todo") activa = "actividad";
   if (vista === "ajustes") activa = "ajustes";
 
   const pestañas = [
     ["alumnos", "Alumnos"],
-    ["actividad", "Actividad"],
+    ["actividad", "Hoy"],
     ["ajustes", "Ajustes"],
   ];
 
@@ -315,7 +315,7 @@ function pantallaInicio() {
 
 // ── Actividad: quién entrenó y cuándo ──
 function pantallaActividad() {
-  const titulo = `<h1 class="titulo">Actividad</h1>` + seccionAgenda();
+    const titulo = `<button class="volver" type="button" data-accion="volver-hoy">← Hoy</button><h1 class="titulo">Actividad</h1>`;
   
   if (cargandoActividad) {
     return titulo + `<p class="subtitulo">Cargando actividad…</p>`;
@@ -712,14 +712,15 @@ function pantallaProgreso() {
 // ─────────────────────────────────────────
 
 // En qué pantallas se ve la tab bar (en login, formularios y sesión, no)
-const PANTALLAS_CON_TABBAR = ["inicio", "actividad", "ajustes", "alumno", "progreso"];
+ const PANTALLAS_CON_TABBAR = ["inicio", "actividad", "actividad-todo", "ajustes", "alumno", "progreso"];
 
 function render() {
   const app = document.getElementById("app");
   let html;
 
   if (vista === "login")                html = pantallaLogin();
-  else if (vista === "actividad")       html = pantallaActividad();
+  else if (vista === "actividad")       html = pantallaHoy();
+  else if (vista === "actividad-todo")  html = pantallaActividad();
   else if (vista === "ajustes")         html = pantallaAjustes();
   else if (vista === "alumno")          html = pantallaAlumno(alumnoActual);
   else if (vista === "nuevo")           html = pantallaNuevo();
@@ -964,8 +965,7 @@ document.addEventListener("submit", async (evento) => {
     if (respuesta.error) return fallo("Email o contraseña incorrectos.");
 
     usuario = respuesta.data.user;
-    vista = "inicio";
-    cargarAlumnos();
+     abrirHoy();
   }
 
   if (form.id === "form-nuevo") {
@@ -1179,12 +1179,12 @@ async function iniciar() {
   usuario = sesion.data.session ? sesion.data.session.user : null;
 
   if (usuario) {
-    vista = "inicio";
-    cargarAlumnos();
+    abrirHoy();
   } else {
     vista = "login";
     render();
   }
 }
 
-iniciar();
+// Arranca cuando el navegador terminó de leer TODOS los archivos .js
+document.addEventListener("DOMContentLoaded", iniciar);
