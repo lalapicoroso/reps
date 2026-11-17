@@ -3,7 +3,7 @@
 // Usa variables y funciones de app.js y nutricion.js
 // ─────────────────────────────────────────
 
-const GOOGLE_CLIENT_ID = "590731900236-psioc3jdli2q13dcs4r9fk7obtuqo8qd.apps.googleusercontent.com;"   // 👈
+const GOOGLE_CLIENT_ID = "590731900236-psioc3jdli2q13dcs4r9fk7obtuqo8qd.apps.googleusercontent.com";   // 👈
 const PERMISO_CALENDARIO = "https://www.googleapis.com/auth/calendar.readonly";  // solo lectura
 
 let tokenGoogle = leerToken();   // el "permiso" que te da Google (dura 1 hora)
