@@ -1,23 +1,24 @@
 // ─────────────────────────────────────────
 // IMPORTAR DESDE GOOGLE SHEETS (.xlsx o .csv)
-// Usa variables y funciones de app.js (alumnoActual, ejercicios, db, render...)
-// y la librería SheetJS (XLSX) que carga index.html
+// Usa variables y funciones de app.js y la librería SheetJS (XLSX)
 // ─────────────────────────────────────────
 
 let importacion = nuevaImportacion();
 
 function nuevaImportacion() {
   return {
-    archivo: "",          // nombre del archivo elegido
-    libro: null,          // el Excel ya leído (todas las pestañas)
-    hojasTraining: [],    // pestañas que empiezan con "TRAINING"
-    hojaTraining: "",     // la elegida
-    otras: [],            // pestañas que todavía no importamos
+    archivo: "",
+    libro: null,
+    hojasTraining: [],
+    hojaTraining: "",
+    otras: [],
     rutina: null,
     log: null,
-    error: "",            // error general del archivo
+    nutricion: null,      // objetivos leídos de "Inicio"
+    error: "",
     errorRutina: "",
-    infoLog: "",          // aviso suave sobre el historial
+    infoLog: "",
+    infoNutricion: "",
     importando: false,
     mensaje: "",
   };
@@ -30,7 +31,6 @@ function escapar(texto) {
   return String(texto ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
-// Cualquier valor de celda → texto limpio
 function textoCelda(valor) {
   if (valor === null || valor === undefined) return "";
   return String(valor).trim();
@@ -40,11 +40,9 @@ function claveEjercicio(nombre) {
   return String(nombre).replace(/\(.*?\)/g, "").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
-// Fechas: Excel las guarda como NÚMERO (días desde 1900).
-// También aceptamos texto: "17/11/2026" o "2026-11-17"
 function fechaISO(valor) {
   if (typeof valor === "number") {
-    const d = new Date(Math.round((valor - 25569) * 86400000));   // número de Excel → fecha
+    const d = new Date(Math.round((valor - 25569) * 86400000));
     return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
   }
   const s = textoCelda(valor);
@@ -59,7 +57,7 @@ function fechaISO(valor) {
 }
 
 // ─────────────────────────────────────────
-// 1. LEER CSV (para los que suban un .csv)
+// 1. LEER CSV
 // ─────────────────────────────────────────
 function leerCSV(texto) {
   const filas = [];
@@ -154,11 +152,47 @@ function interpretarLog(filas) {
   return series;
 }
 
+// Inicio: filas "Clave | Valor" → objetivos de nutrición
+// Solo leemos estas claves; el resto de la pestaña no se toca.
+function interpretarInicio(filas) {
+  const datos = {};
+  filas.forEach(f => {
+    const clave = textoCelda(f[0]).toLowerCase();
+    if (clave) datos[clave] = textoCelda(f[1]);
+  });
+
+  const buscar = (...nombres) => {
+    const clave = Object.keys(datos).find(k => nombres.some(n => k.startsWith(n)));
+    return clave ? datos[clave] : "";
+  };
+
+  // "~1.900–1.950 kcal/día" → [1900, 1950] → promedio 1925
+  const promedio = texto => {
+    const numeros = (String(texto).replace(/\./g, "").match(/\d+(?:,\d+)?/g) || [])
+      .slice(0, 2)
+      .map(n => parseFloat(n.replace(",", ".")));
+    return numeros.length ? Math.round(numeros.reduce((a, b) => a + b, 0) / numeros.length) : null;
+  };
+
+  const nutricion = {
+    kcal: promedio(buscar("calorías", "calorias")),
+    proteina: promedio(buscar("proteína", "proteina")),
+    grasas: promedio(buscar("grasas")),
+    carbos: promedio(buscar("carbohidratos", "carbos")),
+    pasos: buscar("pasos") || null,
+    agua: buscar("agua") || null,
+    notas_nutricion: buscar("regla principal") || null,
+  };
+
+  if (!nutricion.kcal && !nutricion.proteina && !nutricion.grasas && !nutricion.carbos) {
+    throw new Error("No encontré calorías ni macros.");
+  }
+  return nutricion;
+}
+
 // ─────────────────────────────────────────
 // 3. LEER EL ARCHIVO ELEGIDO
 // ─────────────────────────────────────────
-
-// Convierte una pestaña del Excel en filas y columnas
 function filasDeHoja(libro, nombre) {
   return XLSX.utils.sheet_to_json(libro.Sheets[nombre], { header: 1, raw: true, defval: "" });
 }
@@ -177,7 +211,6 @@ async function leerArchivo(archivo) {
   const imp = nuevaImportacion();
   imp.archivo = archivo.name;
 
-  // ── Si es un .csv: probamos si es TRAINING, y si no, LOG ──
   if (/\.csv$/i.test(archivo.name)) {
     const filas = leerCSV(await archivo.text());
     try {
@@ -186,13 +219,12 @@ async function leerArchivo(archivo) {
       try {
         imp.log = interpretarLog(filas);
       } catch {
-        imp.error = "No reconocí ese CSV: no parece ni la pestaña TRAINING ni la LOG. Probá con el .xlsx completo.";
+        imp.error = "No reconocí ese CSV. Probá con el .xlsx completo.";
       }
     }
     return imp;
   }
 
-  // ── Si es un .xlsx: leemos todas las pestañas ──
   if (typeof XLSX === "undefined") {
     imp.error = "No se cargó la librería para leer Excel. Revisá la línea de SheetJS en index.html.";
     return imp;
@@ -205,31 +237,34 @@ async function leerArchivo(archivo) {
     return imp;
   }
 
-  const nombres = imp.libro.SheetNames;   // ["Inicio", "TRAINING", "LOG", ...]
+  const nombres = imp.libro.SheetNames;
   imp.hojasTraining = nombres.filter(n => /^training/i.test(n.trim()));
   const hojaLog = nombres.find(n => /^log$/i.test(n.trim()));
-  imp.otras = nombres.filter(n => !imp.hojasTraining.includes(n) && n !== hojaLog);
+  const hojaInicio = nombres.find(n => /^inicio$/i.test(n.trim()));
+  imp.otras = nombres.filter(n => !imp.hojasTraining.includes(n) && n !== hojaLog && n !== hojaInicio);
 
-  if (!imp.hojasTraining.length && !hojaLog) {
-    imp.error = "No encontré pestañas TRAINING ni LOG en este archivo.";
+  if (!imp.hojasTraining.length && !hojaLog && !hojaInicio) {
+    imp.error = "No encontré pestañas TRAINING, LOG ni Inicio en este archivo.";
     return imp;
   }
 
-  // Rutina: por defecto la ÚLTIMA pestaña TRAINING (la fase más nueva)
   if (imp.hojasTraining.length) {
     imp.hojaTraining = imp.hojasTraining[imp.hojasTraining.length - 1];
     leerRutinaDeHoja(imp);
   }
 
-  // Historial
   if (hojaLog) {
-    try {
-      imp.log = interpretarLog(filasDeHoja(imp.libro, hojaLog));
-    } catch (e) {
-      imp.infoLog = e.message;
-    }
+    try { imp.log = interpretarLog(filasDeHoja(imp.libro, hojaLog)); }
+    catch (e) { imp.infoLog = e.message; }
   } else {
     imp.infoLog = "No hay pestaña LOG.";
+  }
+
+  if (hojaInicio) {
+    try { imp.nutricion = interpretarInicio(filasDeHoja(imp.libro, hojaInicio)); }
+    catch (e) { imp.infoNutricion = e.message; }
+  } else {
+    imp.infoNutricion = "No hay pestaña Inicio.";
   }
 
   return imp;
@@ -241,7 +276,6 @@ async function leerArchivo(archivo) {
 function pantallaImportar() {
   const imp = importacion;
 
-  // Zona de carga
   let estado = "Tocá para elegir el archivo .xlsx";
   if (imp.error) estado = "⚠️ " + imp.error;
   else if (imp.archivo) estado = "✓ " + imp.archivo;
@@ -254,10 +288,8 @@ function pantallaImportar() {
     </label>
   `;
 
-  // Qué encontró
   let encontrado = "";
   if (imp.archivo && !imp.error) {
-    // Rutina
     let filaRutina;
     if (imp.rutina) {
       const dias = new Set(imp.rutina.map(e => e.dia)).size;
@@ -268,23 +300,25 @@ function pantallaImportar() {
       filaRutina = `<span class="gris-txt">No hay pestaña TRAINING</span>`;
     }
 
-    // Selector de fase, si hay más de una pestaña TRAINING
     const selector = imp.hojasTraining.length > 1 ? `
       <select class="selector" data-importar="hoja">
         ${imp.hojasTraining.map(h => `<option value="${escapar(h)}" ${h === imp.hojaTraining ? "selected" : ""}>${escapar(h)}</option>`).join("")}
       </select>
     ` : "";
 
-    // Historial
     const filaLog = imp.log
       ? `<span class="ok-txt">✓ ${imp.log.length} series en ${new Set(imp.log.map(r => r.fecha)).size} fechas</span>`
       : `<span class="gris-txt">${escapar(imp.infoLog || "Sin historial")}</span>`;
 
-    // Otras pestañas
+    const n = imp.nutricion;
+    const filaNutricion = n
+      ? `<span class="ok-txt">✓ ${n.kcal ? n.kcal + " kcal · " : ""}P ${n.proteina ?? "—"} · G ${n.grasas ?? "—"} · C ${n.carbos ?? "—"}</span>`
+      : `<span class="gris-txt">${escapar(imp.infoNutricion || "Sin objetivos")}</span>`;
+
     const filaOtras = imp.otras.length ? `
       <div class="fila-enc">
         <b>Más adelante</b>
-        <span class="gris-txt">${imp.otras.map(escapar).join(", ")} · se van a poder importar cuando sumemos Nutrición y Seguimiento</span>
+        <span class="gris-txt">${imp.otras.map(escapar).join(", ")} · se van a poder importar cuando sumemos Seguimiento</span>
       </div>
     ` : "";
 
@@ -293,12 +327,12 @@ function pantallaImportar() {
       <div class="card encontrado">
         <div class="fila-enc"><b>Rutina</b>${selector}${filaRutina}</div>
         <div class="fila-enc"><b>Historial</b>${filaLog}</div>
+        <div class="fila-enc"><b>Nutrición</b>${filaNutricion}</div>
         ${filaOtras}
       </div>
     `;
   }
 
-  // Vista previa de la rutina
   let previa = "";
   if (imp.rutina) {
     const grupos = agruparPorDia(imp.rutina);
@@ -310,7 +344,7 @@ function pantallaImportar() {
     `).join("");
   }
 
-  const listo = (imp.rutina || imp.log) && !imp.importando;
+  const listo = (imp.rutina || imp.log || imp.nutricion) && !imp.importando;
 
   return `
     <button class="volver" data-accion="volver-alumno">← ${alumnoActual.nombre}</button>
@@ -359,7 +393,7 @@ document.addEventListener("change", async (evento) => {
 });
 
 // ─────────────────────────────────────────
-// 6. BOTONES DE ESTA PANTALLA
+// 6. BOTONES
 // ─────────────────────────────────────────
 document.addEventListener("click", async (evento) => {
   const boton = evento.target.closest("[data-accion]");
@@ -451,12 +485,30 @@ async function ejecutarImportacion() {
       seriesNuevas = filas.length;
     }
 
-    // ── C. Listo ──
+    // ── C. Objetivos de nutrición ──
+    let nutricionImportada = false;
+    if (imp.nutricion) {
+      const respuesta = await db
+        .from("alumnos")
+        .update(imp.nutricion)
+        .eq("id", alumno.id)
+        .select()
+        .single();
+      if (respuesta.error) throw respuesta.error;
+      alumnoActual = respuesta.data;
+      alumnos = alumnos.map(a => (a.id === alumnoActual.id ? respuesta.data : a));
+      nutricionImportada = true;
+    }
+
+    // ── D. Listo ──
+    const partes = [`${nuevos.length} ejercicios`, `${seriesNuevas} series nuevas`];
+    if (nutricionImportada) partes.push("objetivos de nutrición");
+
     importacion = nuevaImportacion();
     vista = "alumno";
-    seccionAlumno = "rutina";
+    seccionAlumno = imp.rutina || imp.log ? "rutina" : "nutricion";
     await cargarEjercicios();
-    aviso = `Importación lista: ${nuevos.length} ejercicios y ${seriesNuevas} series nuevas ✓`;
+    aviso = `Importación lista: ${partes.join(", ")} ✓`;
     render();
 
   } catch (e) {

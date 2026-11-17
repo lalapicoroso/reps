@@ -247,6 +247,7 @@ function segmentado() {
   const opciones = [
     ["rutina", "Rutina"],
     ["progreso", "Progreso"],
+    ["nutricion", "Nutrición"],
     ["perfil", "Perfil"],
   ];
 
@@ -483,6 +484,7 @@ function tabPerfil(alumno) {
 function pantallaAlumno(alumno) {
   let contenido;
   if (seccionAlumno === "progreso")    contenido = tabProgreso();
+  else if (seccionAlumno === "nutricion") contenido = tabNutricion(alumno);
   else if (seccionAlumno === "perfil") contenido = tabPerfil(alumno);
   else                                 contenido = tabRutina();
 
@@ -720,6 +722,7 @@ function render() {
   else if (vista === "sesion")          html = pantallaSesion();
   else if (vista === "progreso")        html = pantallaProgreso();
   else if (vista === "importar")        html = pantallaImportar();
+  else if (vista === "editar-nutricion") html = pantallaEditarNutricion(alumnoActual);
   else                                  html = pantallaInicio();
 
   // Agregamos la tab bar al final, solo donde corresponde

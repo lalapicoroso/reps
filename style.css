@@ -624,3 +624,83 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 /* Solo en la app instalada en iPhone (la clase la pone index.html) */
 .app-ios .tabbar { padding-bottom: 30px; }
 .app-ios .espacio-tabbar { height: 110px; }
+/* ── Lección 13: Nutrición ── */
+
+/* Colores de los macros */
+:root {
+  --proteina: var(--lime);
+  --grasas: #f5c451;
+  --carbos: #7fc8f8;
+}
+
+/* El segmented ahora tiene 4 opciones */
+.segmentado { grid-template-columns: repeat(4, 1fr); }
+.segmentado button { font-size: 13px; padding: 10px 2px; }
+
+/* Tarjeta con anillo + leyenda */
+.card.nutri {
+  display: grid;
+  grid-template-columns: 136px 1fr;
+  gap: 18px;
+  align-items: center;
+}
+.anillo { position: relative; width: 136px; height: 136px; }
+.anillo-svg { width: 100%; height: 100%; transform: rotate(-90deg); }  /* arranca arriba */
+.anillo-svg circle { fill: none; stroke-width: 14; stroke-linecap: round; }
+.anillo-svg .pista { stroke: var(--surface2, #1c2119); stroke-linecap: butt; }
+.anillo-svg .m-p { stroke: var(--proteina); }
+.anillo-svg .m-g { stroke: var(--grasas); }
+.anillo-svg .m-c { stroke: var(--carbos); }
+
+/* Texto en el centro del anillo */
+.anillo-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.anillo-centro b { font-size: 24px; font-weight: 900; line-height: 1; }
+.anillo-centro span { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 4px; }
+
+/* Leyenda */
+.macros { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.macro { display: grid; grid-template-columns: 10px 1fr auto; column-gap: 8px; align-items: center; }
+.macro .punto { width: 10px; height: 10px; border-radius: 3px; }
+.punto.m-p { background: var(--proteina); }
+.punto.m-g { background: var(--grasas); }
+.punto.m-c { background: var(--carbos); }
+.m-nombre { font-size: 14px; font-weight: 700; }
+.macro b { font-size: 15px; text-align: right; }
+.m-pct { grid-column: 2 / 4; font-size: 12px; color: var(--muted); margin-top: -2px; }
+
+.nota-kcal { color: var(--grasas); font-size: 13px; margin: -4px 0 0; }
+.card.info .info-texto { font-size: 16px; font-weight: 700; line-height: 1.35; }
+
+/* Formulario: suma de kcal y textarea */
+.suma-macros {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+  padding-bottom: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.suma-macros b { color: var(--lime); font-size: 18px; }
+.form textarea {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: normal;
+  resize: vertical;
+  outline: none;
+}
+.form textarea:focus { border-color: var(--lime); }
