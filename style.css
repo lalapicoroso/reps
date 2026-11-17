@@ -873,3 +873,5 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .card.borrador h3 { margin: 0; }
 .card.borrador p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
 .card.borrador .borrador-tag { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--lime); }
+/* ── Rediseño 7: Perfil ── */
+.sec-title.zona-cuidado { margin: 16px 0 0; }

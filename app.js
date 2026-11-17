@@ -54,7 +54,7 @@ function iniciales(nombre) {
 }
 
 function detalle(alumno) {
-  return [alumno.fase, alumno.dia].filter(Boolean).join(" · ");
+  return [alumno.objetivo, alumno.fase].filter(Boolean).join(" · ");
 }
 
 function encabezado() {
@@ -472,16 +472,12 @@ function tabProgreso() {
 function tabPerfil(alumno) {
   return `
     <div class="lista">
-      <div class="card info">
-        <div><p>Objetivo</p><h3>${alumno.objetivo || "Sin definir"}</h3></div>
-      </div>
-      <div class="dos-columnas">
-        <div class="card info"><div><p>Fase</p><h3>${alumno.fase || "—"}</h3></div></div>
-        <div class="card info"><div><p>Día</p><h3>${alumno.dia || "—"}</h3></div></div>
-      </div>
-      <button class="btn secundario" data-accion="editar">✏️ Editar alumno</button>
-      <button class="btn secundario" data-accion="abrir-importar">📥 Importar desde planilla</button>
-      <button class="btn peligro" data-accion="borrar-alumno">🗑 Borrar alumno</button>
+      <div class="card info"><div><p>Objetivo</p><h3>${alumno.objetivo || "Sin definir"}</h3></div></div>
+      <div class="card info"><div><p>Fase</p><h3>${alumno.fase || "—"}</h3></div></div>
+      <button class="btn secundario" data-accion="editar">Editar alumno</button>
+      <button class="btn secundario" data-accion="abrir-importar">Importar desde planilla</button>
+      <p class="sec-title zona-cuidado">Zona de cuidado</p>
+      <button class="btn peligro" data-accion="borrar-alumno">Borrar alumno</button>
     </div>
   `;
 }
@@ -521,10 +517,7 @@ function pantallaNuevo() {
       <label>Nombre
         <input name="nombre" required placeholder="Ej: Sofía R.">
       </label>
-      <div class="dos-columnas">
         <label>Fase <input name="fase" placeholder="Fase 1"></label>
-        <label>Día  <input name="dia" placeholder="Día 1"></label>
-      </div>
       <label>Objetivo
         <input name="objetivo" placeholder="Ej: Hipertrofia de tren inferior">
       </label>
@@ -543,10 +536,7 @@ function pantallaEditar(alumno) {
       <label>Nombre
         <input name="nombre" required value="${alumno.nombre}">
       </label>
-      <div class="dos-columnas">
         <label>Fase <input name="fase" value="${alumno.fase || ""}"></label>
-        <label>Día  <input name="dia" value="${alumno.dia || ""}"></label>
-      </div>
       <label>Objetivo
         <input name="objetivo" value="${alumno.objetivo || ""}" placeholder="Ej: Hipertrofia de tren inferior">
       </label>
