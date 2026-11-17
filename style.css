@@ -708,3 +708,6 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 /* Espaciado parejo: 12px entre todas las tarjetas */
 .card.nutri { margin-bottom: 12px; }   /* el anillo está fuera de la lista */
 .lista .card.info { margin-bottom: 0; } /* adentro de una lista, el gap ya separa */
+/* ── Lección 14: Pulir ── */
+.link.editar-ej { display: block; padding: 4px 0; margin: -12px 0 16px; font-size: 15px; }
+.ayuda { color: var(--muted); font-size: 13px; text-align: center; margin-top: 16px; line-height: 1.4; }

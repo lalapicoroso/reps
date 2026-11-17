@@ -477,6 +477,7 @@ function tabPerfil(alumno) {
       </div>
       <button class="btn secundario" data-accion="editar">✏️ Editar alumno</button>
       <button class="btn secundario" data-accion="abrir-importar">📥 Importar desde planilla</button>
+      <button class="btn peligro" data-accion="borrar-alumno">🗑 Borrar alumno</button>
     </div>
   `;
 }
@@ -648,6 +649,7 @@ function pantallaProgreso() {
   const titulo = `
     <h1 class="titulo">${ej.nombre}</h1>
     <p class="presc-grande">${ej.series} × ${ej.reps || "—"} · ${ej.dia}</p>
+    <button class="link editar-ej" data-accion="editar-ejercicio">✏️ Editar ejercicio</button>
   `;
 
   if (cargandoHistorial) {
@@ -723,6 +725,7 @@ function render() {
   else if (vista === "progreso")        html = pantallaProgreso();
   else if (vista === "importar")        html = pantallaImportar();
   else if (vista === "editar-nutricion") html = pantallaEditarNutricion(alumnoActual);
+  else if (vista === "editar-ejercicio") html = pantallaEditarEjercicio(ejercicioActual);
   else                                  html = pantallaInicio();
 
   // Agregamos la tab bar al final, solo donde corresponde
