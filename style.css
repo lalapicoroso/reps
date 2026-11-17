@@ -889,3 +889,7 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .fila-enc { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .fila-enc b { flex: none; }
 .fila-enc span { text-align: right; }
+/* Nutrición: más aire entre el nombre del macro y su porcentaje */
+.macros { gap: 16px; }
+.macro { row-gap: 4px; }
+.m-pct { margin-top: 0; }
