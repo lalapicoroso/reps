@@ -266,3 +266,114 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
   cursor: pointer;
 }
 .borrar:hover { color: #ff7a6b; border-color: #ff7a6b; }
+/* ── Lección 7 ── */
+
+/* Encabezado de cada día con botón Entrenar */
+.dia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0 8px;
+}
+.dia-header .sec-title { margin: 0; }
+
+.entrenar {
+  background: var(--lime);
+  color: var(--bg);
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  flex: none;
+}
+
+/* Mensaje de éxito */
+.aviso {
+  background: color-mix(in srgb, var(--lime) 14%, var(--surface));
+  border: 1px solid var(--lime);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+/* Barra de progreso pegada arriba al scrollear */
+.progreso {
+  position: sticky;   /* = "fixed" pero solo cuando llega arriba */
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 12px 0 16px;
+  margin-bottom: 8px;
+}
+.progreso .fila {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.barra {
+  height: 8px;
+  background: var(--surface);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.barra i {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+  border-radius: 99px;
+  transition: width 0.3s;   /* la barra crece animada */
+}
+
+/* Tarjetas de la sesión */
+.sesion-lista { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.card.sesion-ej { display: block; }   /* acá no queremos la fila horizontal de .card */
+.sesion-ej h3 { font-size: 18px; }
+.card .anterior { font-size: 13px; color: var(--muted); margin: 4px 0 14px; }
+
+/* Grilla de series: número | kg | reps */
+.series {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.series .h {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+.series .n {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+.series input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 4px;
+  text-align: center;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  outline: none;
+}
+.series input:focus { border-color: var(--lime); }
+.series input::placeholder { color: color-mix(in srgb, var(--muted) 55%, transparent); }
+.series input.lleno {
+  border-color: color-mix(in srgb, var(--lime) 50%, var(--line));
+  background: color-mix(in srgb, var(--lime) 10%, var(--bg));
+}

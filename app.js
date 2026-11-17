@@ -10,16 +10,24 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // 2. ESTADO
 // ─────────────────────────────────────────
 let usuario = null;
-let vista = "inicio";        // "login" | "inicio" | "alumno" | "nuevo" | "editar" | "nuevo-ejercicio"
-let vistaAnterior = null;    // para saber si cambiamos de pantalla
+let vista = "inicio";        // "login" | "inicio" | "alumno" | "nuevo" | "editar" | "nuevo-ejercicio" | "sesion"
+let vistaAnterior = null;
 let alumnos = [];
 let cargando = true;
 let error = null;
 let alumnoActual = null;
+let aviso = "";              // mensaje de éxito que se muestra una vez
 
-let ejercicios = [];         // la rutina del alumno abierto
+let ejercicios = [];
 let cargandoEjercicios = false;
-let ultimoDia = "";          // recuerda el último día usado, para cargar rápido
+let ultimoDia = "";
+
+// Sesión de entrenamiento
+let sesionDia = null;        // nombre del día que se entrena
+let sesionEjercicios = [];   // ejercicios de ese día
+let sesionDatos = {};        // lo anotado: { idEjercicio: { nroSerie: { kg, reps } } }
+let ultimaVez = {};          // { idEjercicio: [registros de la última vez] }
+let cargandoSesion = false;
 
 // ─────────────────────────────────────────
 // 3. AYUDANTES
@@ -41,16 +49,50 @@ function encabezado() {
   `;
 }
 
-// Agrupa los ejercicios por día:
-// [ {dia:"Día 1",...}, {dia:"Día 1",...}, {dia:"Día 2",...} ]
-//   → { "Día 1": [ej, ej], "Día 2": [ej] }
 function agruparPorDia(lista) {
   const grupos = {};
   lista.forEach(ej => {
-    if (!grupos[ej.dia]) grupos[ej.dia] = [];  // si el día no existe, creamos su lista
+    if (!grupos[ej.dia]) grupos[ej.dia] = [];
     grupos[ej.dia].push(ej);
   });
   return grupos;
+}
+
+// Fecha de hoy en formato "2026-11-17" (el que usa la base)
+function hoy() {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
+// "2026-11-17" → "17/11"
+function fechaCorta(iso) {
+  const partes = iso.split("-");
+  return `${partes[2]}/${partes[1]}`;
+}
+
+// Convierte lo que se escribió en un número: "62,5" → 62.5 / "" → null
+function numero(valor) {
+  if (valor === undefined || valor === null || valor === "") return null;
+  const n = parseFloat(String(valor).replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+// ¿Cuántas series tienen algo anotado?
+function seriesHechas() {
+  let total = 0;
+  Object.values(sesionDatos).forEach(series => {
+    Object.values(series).forEach(s => {
+      if (s.kg || s.reps) total++;
+    });
+  });
+  return total;
+}
+
+// ¿Cuántas series tiene el día en total?
+function seriesTotales() {
+  return sesionEjercicios.reduce((suma, ej) => suma + ej.series, 0);
 }
 
 // ─────────────────────────────────────────
@@ -106,21 +148,24 @@ function pantallaInicio() {
   `;
 }
 
-// La rutina, separada en su propia función (como un componente)
 function seccionRutina() {
   if (cargandoEjercicios) {
     return `<p class="subtitulo">Cargando rutina…</p>`;
   }
 
   const grupos = agruparPorDia(ejercicios);
-  const dias = Object.keys(grupos);  // ["Día 1", "Día 2", ...]
+  const dias = Object.keys(grupos);
 
   if (!dias.length) {
     return `<p class="vacio">Todavía no tiene rutina.<br>Agregá el primer ejercicio 👆</p>`;
   }
 
-  return dias.map(dia => `
-    <h3 class="sec-title">${dia}</h3>
+  // data-dia="${i}" guarda la POSICIÓN del día (0, 1, 2…)
+  return dias.map((dia, i) => `
+    <div class="dia-header">
+      <h3 class="sec-title">${dia}</h3>
+      <button class="entrenar" data-accion="entrenar" data-dia="${i}">Entrenar ▶</button>
+    </div>
     <div class="lista">
       ${grupos[dia].map(ej => `
         <div class="card ejercicio">
@@ -138,6 +183,8 @@ function seccionRutina() {
 function pantallaAlumno(alumno) {
   return `
     <button class="volver" data-accion="volver">← Alumnos</button>
+
+    ${aviso ? `<div class="aviso">${aviso}</div>` : ""}
 
     <div class="perfil">
       <div class="avatar grande">${iniciales(alumno.nombre)}</div>
@@ -208,7 +255,6 @@ function pantallaEditar(alumno) {
 }
 
 function pantallaNuevoEjercicio() {
-  // <datalist> = sugerencias para el input: muestra los días que ya existen
   const diasExistentes = Object.keys(agruparPorDia(ejercicios));
   const opciones = diasExistentes.map(d => `<option value="${d}">`).join("");
 
@@ -234,6 +280,74 @@ function pantallaNuevoEjercicio() {
   `;
 }
 
+// La pantalla del gimnasio
+function pantallaSesion() {
+  const volver = `<button class="volver" data-accion="salir-sesion">← ${alumnoActual.nombre}</button>`;
+
+  if (cargandoSesion) {
+    return volver + `<p class="subtitulo">Preparando la sesión…</p>`;
+  }
+
+  const tarjetas = sesionEjercicios.map(ej => {
+    const anterior = ultimaVez[ej.id] || [];
+
+    // Texto "Última (10/11): 60×10 · 60×9 · 55×10"
+    const textoAnterior = anterior.length
+      ? `Última (${fechaCorta(anterior[0].fecha)}): ` +
+        anterior.map(r => `${r.kg ?? "–"}×${r.reps ?? "–"}`).join(" · ")
+      : "Primera vez con este ejercicio 🎉";
+
+    // Una fila por serie: número | kg | reps
+    let filas = "";
+    for (let s = 1; s <= ej.series; s++) {
+      const previa = anterior.find(r => r.serie === s) || {};
+      const actual = (sesionDatos[ej.id] && sesionDatos[ej.id][s]) || {};
+
+      filas += `
+        <span class="n">${s}</span>
+        <input data-ej="${ej.id}" data-serie="${s}" data-campo="kg"
+               inputmode="decimal" placeholder="${previa.kg ?? "kg"}"
+               value="${actual.kg ?? ""}" class="${actual.kg ? "lleno" : ""}">
+        <input data-ej="${ej.id}" data-serie="${s}" data-campo="reps"
+               inputmode="numeric" placeholder="${previa.reps ?? "reps"}"
+               value="${actual.reps ?? ""}" class="${actual.reps ? "lleno" : ""}">
+      `;
+    }
+
+    return `
+      <div class="card sesion-ej">
+        <h3>${ej.nombre}</h3>
+        <p class="presc">${ej.series} × ${ej.reps || "—"}</p>
+        <p class="anterior">${textoAnterior}</p>
+        <div class="series">
+          <span class="h">Serie</span><span class="h">Kg</span><span class="h">Reps</span>
+          ${filas}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const hechas = seriesHechas();
+  const total = seriesTotales();
+
+  return `
+    ${volver}
+    <h1 class="titulo">${sesionDia}</h1>
+
+    <div class="progreso">
+      <div class="fila">
+        <span>Progreso</span>
+        <span id="progreso-texto">${hechas} de ${total} series</span>
+      </div>
+      <div class="barra"><i id="progreso-barra" style="width:${total ? (hechas / total) * 100 : 0}%"></i></div>
+    </div>
+
+    <div class="sesion-lista">${tarjetas}</div>
+
+    <button class="btn" data-accion="guardar-sesion">Guardar sesión</button>
+  `;
+}
+
 // ─────────────────────────────────────────
 // 5. RENDER
 // ─────────────────────────────────────────
@@ -245,12 +359,22 @@ function render() {
   else if (vista === "nuevo")           app.innerHTML = pantallaNuevo();
   else if (vista === "editar")          app.innerHTML = pantallaEditar(alumnoActual);
   else if (vista === "nuevo-ejercicio") app.innerHTML = pantallaNuevoEjercicio();
+  else if (vista === "sesion")          app.innerHTML = pantallaSesion();
   else                                  app.innerHTML = pantallaInicio();
 
-  // Solo volvemos arriba si cambiamos de pantalla
-  // (así, al borrar un ejercicio, no te salta el scroll)
+  aviso = "";  // el aviso se muestra una sola vez
+
   if (vista !== vistaAnterior) window.scrollTo(0, 0);
   vistaAnterior = vista;
+}
+
+// Actualiza SOLO la barra de progreso, sin redibujar toda la pantalla
+// (si redibujáramos todo, el input perdería el foco mientras escribís)
+function actualizarProgreso() {
+  const hechas = seriesHechas();
+  const total = seriesTotales();
+  document.getElementById("progreso-texto").textContent = `${hechas} de ${total} series`;
+  document.getElementById("progreso-barra").style.width = `${total ? (hechas / total) * 100 : 0}%`;
 }
 
 // ─────────────────────────────────────────
@@ -298,17 +422,79 @@ document.addEventListener("click", async (evento) => {
   if (accion === "borrar-ejercicio") {
     const id = Number(boton.dataset.id);
     const ej = ejercicios.find(e => e.id === id);
-    // confirm() muestra un cartelito de "¿Estás segura?"
-    if (!confirm(`¿Borrar "${ej.nombre}"?`)) return;
+    if (!confirm(`¿Borrar "${ej.nombre}"? También se borra su historial.`)) return;
 
     const respuesta = await db.from("ejercicios").delete().eq("id", id);
     if (respuesta.error) {
       alert("No se pudo borrar: " + respuesta.error.message);
       return;
     }
-
-    // filter = "quedate con todos MENOS el que borramos"
     ejercicios = ejercicios.filter(e => e.id !== id);
+    render();
+  }
+
+  // ── Empezar a entrenar un día ──
+  if (accion === "entrenar") {
+    const grupos = agruparPorDia(ejercicios);
+    const dias = Object.keys(grupos);
+    sesionDia = dias[Number(boton.dataset.dia)];
+    sesionEjercicios = grupos[sesionDia];
+    sesionDatos = {};
+    vista = "sesion";
+    cargarUltimaVez();
+  }
+
+  // ── Salir de la sesión (avisa si hay algo sin guardar) ──
+  if (accion === "salir-sesion") {
+    if (seriesHechas() > 0 && !confirm("¿Salir sin guardar? Se pierde lo anotado.")) return;
+    sesionDatos = {};
+    vista = "alumno";
+    render();
+  }
+
+  // ── Guardar la sesión ──
+  if (accion === "guardar-sesion") {
+    // Armamos una fila por cada serie que tenga algo anotado
+    const filas = [];
+    sesionEjercicios.forEach(ej => {
+      const series = sesionDatos[ej.id] || {};
+      Object.keys(series).forEach(nroSerie => {
+        const kg = numero(series[nroSerie].kg);
+        const reps = numero(series[nroSerie].reps);
+        if (kg === null && reps === null) return;  // serie vacía: la salteamos
+
+        filas.push({
+          alumno_id: alumnoActual.id,
+          ejercicio_id: ej.id,
+          fecha: hoy(),
+          serie: Number(nroSerie),
+          kg: kg,
+          reps: reps === null ? null : Math.round(reps),
+        });
+      });
+    });
+
+    if (!filas.length) {
+      alert("Anotá al menos una serie antes de guardar.");
+      return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "Guardando…";
+
+    // insert de VARIAS filas de una: le pasamos una lista
+    const respuesta = await db.from("registros").insert(filas);
+
+    if (respuesta.error) {
+      alert("No se pudo guardar: " + respuesta.error.message);
+      boton.disabled = false;
+      boton.textContent = "Guardar sesión";
+      return;
+    }
+
+    aviso = `¡Sesión guardada! ${filas.length} series registradas 💪`;
+    sesionDatos = {};
+    vista = "alumno";
     render();
   }
 
@@ -317,9 +503,32 @@ document.addEventListener("click", async (evento) => {
     usuario = null;
     alumnos = [];
     ejercicios = [];
+    sesionDatos = {};
     vista = "login";
     render();
   }
+});
+
+// ─────────────────────────────────────────
+// 6b. ESCRIBIR EN LA SESIÓN
+//     "input" se dispara con cada tecla
+// ─────────────────────────────────────────
+document.addEventListener("input", (evento) => {
+  const campo = evento.target;
+  if (!campo.dataset.campo) return;  // solo nos importan los inputs de series
+
+  const ej = campo.dataset.ej;
+  const serie = campo.dataset.serie;
+
+  // Creamos los "cajones" si no existen todavía
+  if (!sesionDatos[ej]) sesionDatos[ej] = {};
+  if (!sesionDatos[ej][serie]) sesionDatos[ej][serie] = {};
+
+  sesionDatos[ej][serie][campo.dataset.campo] = campo.value;
+
+  // Feedback visual: el input se pinta cuando tiene algo
+  campo.classList.toggle("lleno", campo.value !== "");
+  actualizarProgreso();
 });
 
 // ─────────────────────────────────────────
@@ -337,7 +546,6 @@ document.addEventListener("submit", async (evento) => {
   boton.disabled = true;
   mensaje.textContent = "";
 
-  // Si algo falla, mostramos el error y reactivamos el botón
   function fallo(texto) {
     mensaje.textContent = texto;
     boton.disabled = false;
@@ -392,19 +600,19 @@ document.addEventListener("submit", async (evento) => {
   if (form.id === "form-ejercicio") {
     boton.textContent = "Guardando…";
     const nuevo = {
-      alumno_id: alumnoActual.id,           // ← la conexión con el alumno
-      dia: datos.dia.trim(),                // trim() saca espacios de más
+      alumno_id: alumnoActual.id,
+      dia: datos.dia.trim(),
       nombre: datos.nombre.trim(),
-      series: Number(datos.series) || 3,    // el input devuelve texto: lo pasamos a número
+      series: Number(datos.series) || 3,
       reps: datos.reps,
-      orden: ejercicios.length,             // va al final de la lista
+      orden: ejercicios.length,
     };
 
     const respuesta = await db.from("ejercicios").insert(nuevo).select().single();
     if (respuesta.error) return fallo("No se pudo guardar: " + respuesta.error.message);
 
     ejercicios.push(respuesta.data);
-    ultimoDia = nuevo.dia;   // la próxima vez el día ya viene completo
+    ultimoDia = nuevo.dia;
     vista = "alumno";
     render();
   }
@@ -435,7 +643,6 @@ async function cargarEjercicios() {
   ejercicios = [];
   render();
 
-  // "traé los ejercicios DE ESTE alumno, ordenados por día y por orden"
   const respuesta = await db
     .from("ejercicios")
     .select("*")
@@ -450,6 +657,37 @@ async function cargarEjercicios() {
   }
 
   cargandoEjercicios = false;
+  render();
+}
+
+// Busca qué hizo la última vez en cada ejercicio del día
+async function cargarUltimaVez() {
+  cargandoSesion = true;
+  ultimaVez = {};
+  render();
+
+  const ids = sesionEjercicios.map(ej => ej.id);
+
+  // "registros de estos ejercicios, ANTERIORES a hoy, del más nuevo al más viejo"
+  const respuesta = await db
+    .from("registros")
+    .select("*")
+    .in("ejercicio_id", ids)
+    .lt("fecha", hoy())
+    .order("fecha", { ascending: false })
+    .order("serie");
+
+  if (!respuesta.error) {
+    sesionEjercicios.forEach(ej => {
+      const suyos = respuesta.data.filter(r => r.ejercicio_id === ej.id);
+      if (suyos.length) {
+        const ultimaFecha = suyos[0].fecha;  // el primero es el más reciente
+        ultimaVez[ej.id] = suyos.filter(r => r.fecha === ultimaFecha);
+      }
+    });
+  }
+
+  cargandoSesion = false;
   render();
 }
 
