@@ -10,13 +10,17 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // 2. ESTADO
 // ─────────────────────────────────────────
 let usuario = null;
-let vista = "inicio";        // "login" | "inicio" | "alumno" | "nuevo" | "editar" | "nuevo-ejercicio" | "sesion" | "progreso"
+// Pantallas: "login" | "inicio" | "actividad" | "ajustes" |
+//            "alumno" | "nuevo" | "editar" | "nuevo-ejercicio" | "sesion" | "progreso"
+let vista = "inicio";
 let vistaAnterior = null;
 let alumnos = [];
 let cargando = true;
 let error = null;
 let alumnoActual = null;
 let aviso = "";
+
+let seccionAlumno = "rutina";   // segmented control: "rutina" | "progreso" | "perfil"
 
 let ejercicios = [];
 let cargandoEjercicios = false;
@@ -29,10 +33,18 @@ let sesionDatos = {};
 let ultimaVez = {};
 let cargandoSesion = false;
 
-// Progreso de un ejercicio
+// Progreso de UN ejercicio
 let ejercicioActual = null;
-let historial = [];          // sesiones agrupadas por fecha
+let historial = [];
 let cargandoHistorial = false;
+
+// Resumen de progreso de TODOS los ejercicios del alumno
+let resumen = { porEjercicio: [], fechas: [] };
+let cargandoResumen = false;
+
+// Actividad: quién entrenó y cuándo
+let actividad = [];
+let cargandoActividad = false;
 
 // ─────────────────────────────────────────
 // 3. AYUDANTES
@@ -49,7 +61,6 @@ function encabezado() {
   return `
     <div class="top">
       <div class="logo"><i></i>REPS</div>
-      <button class="salir" data-accion="salir">Salir</button>
     </div>
   `;
 }
@@ -70,17 +81,24 @@ function hoy() {
   return `${d.getFullYear()}-${mes}-${dia}`;
 }
 
+// Fecha de hace N días, en el mismo formato
+function haceDias(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
 function fechaCorta(iso) {
   const partes = iso.split("-");
   return `${partes[2]}/${partes[1]}`;
 }
 
-// "2026-11-17" → "lun, 17 nov"
 function fechaLarga(iso) {
   return new Date(iso + "T12:00").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" });
 }
 
-// 57.49999 → 57.5 / 60 → 60
 function redondear(n) {
   return Math.round(n * 10) / 10;
 }
@@ -105,8 +123,6 @@ function seriesTotales() {
   return sesionEjercicios.reduce((suma, ej) => suma + ej.series, 0);
 }
 
-// Agrupa los registros por fecha y calcula datos de cada sesión:
-// [serie, serie, serie...] → [ { fecha, series, maxKg, volumen }, ... ]
 function agruparPorFecha(registros) {
   const porFecha = {};
   registros.forEach(r => {
@@ -121,14 +137,22 @@ function agruparPorFecha(registros) {
       fecha,
       series,
       maxKg: kgs.length ? Math.max(...kgs) : null,
-      // volumen = suma de (kg × reps) de todas las series
       volumen: series.reduce((total, s) => total + (s.kg || 0) * (s.reps || 0), 0),
     };
   });
 }
 
 // ─────────────────────────────────────────
-// 3b. GRÁFICO (SVG dibujado con código)
+// 3b. ÍCONOS (SVG con stroke="currentColor": toman el color del texto)
+// ─────────────────────────────────────────
+const ICONOS = {
+  alumnos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.8c1.9.7 3 2.4 3 5.2"/></svg>`,
+  actividad: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>`,
+  ajustes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>`,
+};
+
+// ─────────────────────────────────────────
+// 3c. GRÁFICOS
 // ─────────────────────────────────────────
 function grafico(sesiones) {
   const puntos = sesiones.filter(s => s.maxKg !== null);
@@ -137,20 +161,17 @@ function grafico(sesiones) {
     return `<p class="vacio">Con 2 sesiones o más vas a ver el gráfico 📈</p>`;
   }
 
-  // Tamaño del dibujo y márgenes (como un frame con padding)
   const W = 358, H = 170;
   const m = { arriba: 20, derecha: 16, abajo: 28, izquierda: 40 };
 
   const valores = puntos.map(p => p.maxKg);
   let min = Math.min(...valores);
   let max = Math.max(...valores);
-  if (min === max) { min -= 5; max += 5; }   // si todo es igual, damos aire
+  if (min === max) { min -= 5; max += 5; }
 
-  // Convierten "número de sesión" y "kg" en coordenadas x/y del dibujo
   const x = i => m.izquierda + (i / (puntos.length - 1)) * (W - m.izquierda - m.derecha);
   const y = kg => m.arriba + (1 - (kg - min) / (max - min)) * (H - m.arriba - m.abajo);
 
-  // Una línea SVG se escribe como "M x,y L x,y L x,y" (Mover, Línea, Línea...)
   const linea = puntos.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.maxKg).toFixed(1)}`).join(" ");
   const area = `${linea} L${x(puntos.length - 1).toFixed(1)},${H - m.abajo} L${x(0).toFixed(1)},${H - m.abajo} Z`;
 
@@ -176,8 +197,70 @@ function grafico(sesiones) {
   `;
 }
 
+function miniGrafico(sesiones) {
+  const valores = sesiones.map(s => s.maxKg).filter(v => v !== null);
+  if (valores.length < 2) return "";
+
+  const W = 72, H = 28, p = 3;
+  let min = Math.min(...valores), max = Math.max(...valores);
+  if (min === max) { min -= 1; max += 1; }
+
+  const puntos = valores.map((v, i) => {
+    const x = p + (i / (valores.length - 1)) * (W - p * 2);
+    const y = p + (1 - (v - min) / (max - min)) * (H - p * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  return `<svg class="mini" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${puntos}"/></svg>`;
+}
+
 // ─────────────────────────────────────────
-// 4. PANTALLAS
+// 4. NAVEGACIÓN
+// ─────────────────────────────────────────
+
+// Tab bar GLOBAL (abajo)
+function tabbar() {
+  // ¿Qué pestaña se marca? Todo lo de alumnos cuenta como "alumnos"
+  let activa = "alumnos";
+  if (vista === "actividad") activa = "actividad";
+  if (vista === "ajustes") activa = "ajustes";
+
+  const pestañas = [
+    ["alumnos", "Alumnos"],
+    ["actividad", "Actividad"],
+    ["ajustes", "Ajustes"],
+  ];
+
+  const botones = pestañas.map(([id, texto]) => `
+    <button class="tab ${activa === id ? "on" : ""}" data-accion="ir" data-destino="${id}"
+            aria-current="${activa === id ? "page" : "false"}">
+      ${ICONOS[id]}
+      <span>${texto}</span>
+    </button>
+  `).join("");
+
+  return `<nav class="tabbar" aria-label="Navegación principal"><div class="in">${botones}</div></nav>`;
+}
+
+// Segmented control (adentro del alumno)
+function segmentado() {
+  const opciones = [
+    ["rutina", "Rutina"],
+    ["progreso", "Progreso"],
+    ["perfil", "Perfil"],
+  ];
+
+  const botones = opciones.map(([id, texto]) => `
+    <button role="tab" aria-selected="${seccionAlumno === id}"
+            class="${seccionAlumno === id ? "on" : ""}"
+            data-accion="seccion" data-seccion="${id}">${texto}</button>
+  `).join("");
+
+  return `<div class="segmentado" role="tablist">${botones}</div>`;
+}
+
+// ─────────────────────────────────────────
+// 5. PANTALLAS
 // ─────────────────────────────────────────
 function pantallaLogin() {
   return `
@@ -229,6 +312,74 @@ function pantallaInicio() {
   `;
 }
 
+// ── Actividad: quién entrenó y cuándo ──
+function pantallaActividad() {
+  const titulo = `<h1 class="titulo">Actividad</h1>`;
+
+  if (cargandoActividad) {
+    return titulo + `<p class="subtitulo">Cargando actividad…</p>`;
+  }
+  if (!actividad.length) {
+    return titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.<br>Cuando guardes una sesión, aparece acá 💪</p>`;
+  }
+
+  // Números destacados
+  const deHoy = actividad.filter(a => a.fecha === hoy()).length;
+  const deLaSemana = actividad.filter(a => a.fecha >= haceDias(6)).length;
+
+  // Agrupamos por fecha
+  const porFecha = {};
+  actividad.forEach(a => {
+    if (!porFecha[a.fecha]) porFecha[a.fecha] = [];
+    porFecha[a.fecha].push(a);
+  });
+
+  const bloques = Object.keys(porFecha).sort().reverse().map(fecha => {
+    const etiqueta = fecha === hoy() ? "Hoy" : fechaLarga(fecha);
+
+    const items = porFecha[fecha].map(a => {
+      const alumno = alumnos.find(x => x.id === a.alumnoId);
+      if (!alumno) return "";
+      const dias = [...a.dias].join(" · ") || "Entrenamiento";
+      return `
+        <button class="card" data-accion="abrir" data-id="${alumno.id}">
+          <div class="avatar">${iniciales(alumno.nombre)}</div>
+          <div>
+            <h3>${alumno.nombre}</h3>
+            <p>${dias} · ${a.series} series</p>
+          </div>
+        </button>
+      `;
+    }).join("");
+
+    return `<h3 class="sec-title">${etiqueta}</h3><div class="lista">${items}</div>`;
+  }).join("");
+
+  return `
+    ${titulo}
+    <div class="stats">
+      <div class="stat"><div class="v">${deHoy}</div><div class="k">Hoy</div></div>
+      <div class="stat"><div class="v">${deLaSemana}</div><div class="k">Últimos 7 días</div></div>
+      <div class="stat"><div class="v">${actividad.length}</div><div class="k">Total</div></div>
+    </div>
+    ${bloques}
+  `;
+}
+
+// ── Ajustes ──
+function pantallaAjustes() {
+  return `
+    <h1 class="titulo">Ajustes</h1>
+    <div class="lista">
+      <div class="card info"><div><p>Cuenta</p><h3 class="email">${usuario ? usuario.email : ""}</h3></div></div>
+      <div class="card info"><div><p>Alumnos</p><h3>${alumnos.length}</h3></div></div>
+      <button class="btn peligro" data-accion="salir">Cerrar sesión</button>
+    </div>
+    <p class="version">Reps · versión 10</p>
+  `;
+}
+
+// ── Contenido de cada sección del alumno ──
 function seccionRutina() {
   if (cargandoEjercicios) {
     return `<p class="subtitulo">Cargando rutina…</p>`;
@@ -263,33 +414,93 @@ function seccionRutina() {
   `).join("");
 }
 
+function tabRutina() {
+  return `
+    <div class="acciones-seccion">
+      <button class="link" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
+    </div>
+    ${seccionRutina()}
+  `;
+}
+
+function tabProgreso() {
+  if (cargandoResumen) {
+    return `<p class="subtitulo">Calculando progreso…</p>`;
+  }
+  if (!ejercicios.length) {
+    return `<p class="vacio">Primero armá la rutina en <b>Rutina</b> 💪</p>`;
+  }
+
+  const fechas = resumen.fechas;
+  const ultimaFecha = fechas.length ? fechaLarga(fechas[fechas.length - 1]) : "—";
+
+  const tarjetas = resumen.porEjercicio.map(({ ej, sesiones }) => {
+    const maximos = sesiones.map(s => s.maxKg).filter(v => v !== null);
+    const record = maximos.length ? redondear(Math.max(...maximos)) : null;
+    const texto = sesiones.length
+      ? `Récord ${record ?? "—"} kg · ${sesiones.length} ${sesiones.length === 1 ? "sesión" : "sesiones"}`
+      : "Sin registros todavía";
+
+    return `
+      <button class="card ej-prog" data-accion="ver-progreso" data-id="${ej.id}">
+        <span class="ep-texto">
+          <h3>${ej.nombre}</h3>
+          <p>${texto}</p>
+        </span>
+        ${miniGrafico(sesiones)}
+        <span class="chev">›</span>
+      </button>
+    `;
+  }).join("");
+
+  return `
+    <div class="stats">
+      <div class="stat"><div class="v">${fechas.length}</div><div class="k">Entrenamientos</div></div>
+      <div class="stat stat-ancha"><div class="v chica">${ultimaFecha}</div><div class="k">Último entrenamiento</div></div>
+    </div>
+
+    <h3 class="sec-title">Por ejercicio</h3>
+    <div class="lista">${tarjetas}</div>
+  `;
+}
+
+function tabPerfil(alumno) {
+  return `
+    <div class="lista">
+      <div class="card info">
+        <div><p>Objetivo</p><h3>${alumno.objetivo || "Sin definir"}</h3></div>
+      </div>
+      <div class="dos-columnas">
+        <div class="card info"><div><p>Fase</p><h3>${alumno.fase || "—"}</h3></div></div>
+        <div class="card info"><div><p>Día</p><h3>${alumno.dia || "—"}</h3></div></div>
+      </div>
+      <button class="btn secundario" data-accion="editar">✏️ Editar alumno</button>
+    </div>
+  `;
+}
+
 function pantallaAlumno(alumno) {
+  let contenido;
+  if (seccionAlumno === "progreso")    contenido = tabProgreso();
+  else if (seccionAlumno === "perfil") contenido = tabPerfil(alumno);
+  else                                 contenido = tabRutina();
+
   return `
     <button class="volver" data-accion="volver">← Alumnos</button>
 
     ${aviso ? `<div class="aviso">${aviso}</div>` : ""}
 
-    <div class="perfil">
-      <div class="avatar grande">${iniciales(alumno.nombre)}</div>
-      <h1>${alumno.nombre}</h1>
-      <p>${detalle(alumno)}</p>
-    </div>
-
-    <div class="card info">
+    <div class="alumno-head">
+      <div class="avatar">${iniciales(alumno.nombre)}</div>
       <div>
-        <p>Objetivo</p>
-        <h3>${alumno.objetivo || "Sin definir"}</h3>
+        <h1>${alumno.nombre}</h1>
+        <p>${detalle(alumno)}</p>
       </div>
     </div>
 
-    <button class="btn secundario" data-accion="editar">✏️ Editar alumno</button>
+    ${segmentado()}
 
-    <div class="seccion">
-      <h2>Rutina</h2>
-      <button class="link" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
-    </div>
-
-    ${seccionRutina()}
+    ${contenido}
   `;
 }
 
@@ -428,7 +639,6 @@ function pantallaSesion() {
   `;
 }
 
-// La pantalla de progreso de un ejercicio
 function pantallaProgreso() {
   const ej = ejercicioActual;
   const volver = `<button class="volver" data-accion="volver-alumno">← ${alumnoActual.nombre}</button>`;
@@ -445,7 +655,6 @@ function pantallaProgreso() {
     return volver + titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.<br>Tocá "Entrenar ▶" en la rutina para empezar 💪</p>`;
   }
 
-  // ── Números destacados ──
   const maximos = historial.map(s => s.maxKg).filter(v => v !== null);
   const record = maximos.length ? Math.max(...maximos) : null;
   const ultima = historial[historial.length - 1];
@@ -460,7 +669,6 @@ function pantallaProgreso() {
     else                     { cambio = "="; }
   }
 
-  // ── Lista de sesiones (la más nueva primero) ──
   const sesiones = [...historial].reverse().map(s => `
     <div class="card sesion-hist">
       <div class="sh-top">
@@ -491,20 +699,33 @@ function pantallaProgreso() {
 }
 
 // ─────────────────────────────────────────
-// 5. RENDER
+// 6. RENDER
 // ─────────────────────────────────────────
+
+// En qué pantallas se ve la tab bar (en login, formularios y sesión, no)
+const PANTALLAS_CON_TABBAR = ["inicio", "actividad", "ajustes", "alumno", "progreso"];
+
 function render() {
   const app = document.getElementById("app");
+  let html;
 
-  if (vista === "login")                app.innerHTML = pantallaLogin();
-  else if (vista === "alumno")          app.innerHTML = pantallaAlumno(alumnoActual);
-  else if (vista === "nuevo")           app.innerHTML = pantallaNuevo();
-  else if (vista === "editar")          app.innerHTML = pantallaEditar(alumnoActual);
-  else if (vista === "nuevo-ejercicio") app.innerHTML = pantallaNuevoEjercicio();
-  else if (vista === "sesion")          app.innerHTML = pantallaSesion();
-  else if (vista === "progreso")        app.innerHTML = pantallaProgreso();
-  else                                  app.innerHTML = pantallaInicio();
+  if (vista === "login")                html = pantallaLogin();
+  else if (vista === "actividad")       html = pantallaActividad();
+  else if (vista === "ajustes")         html = pantallaAjustes();
+  else if (vista === "alumno")          html = pantallaAlumno(alumnoActual);
+  else if (vista === "nuevo")           html = pantallaNuevo();
+  else if (vista === "editar")          html = pantallaEditar(alumnoActual);
+  else if (vista === "nuevo-ejercicio") html = pantallaNuevoEjercicio();
+  else if (vista === "sesion")          html = pantallaSesion();
+  else if (vista === "progreso")        html = pantallaProgreso();
+  else                                  html = pantallaInicio();
 
+  // Agregamos la tab bar al final, solo donde corresponde
+  if (PANTALLAS_CON_TABBAR.includes(vista)) {
+    html += `<div class="espacio-tabbar"></div>` + tabbar();
+  }
+
+  app.innerHTML = html;
   aviso = "";
 
   if (vista !== vistaAnterior) window.scrollTo(0, 0);
@@ -519,16 +740,43 @@ function actualizarProgreso() {
 }
 
 // ─────────────────────────────────────────
-// 6. CLICS
+// 7. CLICS
 // ─────────────────────────────────────────
 document.addEventListener("click", async (evento) => {
   const boton = evento.target.closest("[data-accion]");
   if (!boton) return;
   const accion = boton.dataset.accion;
 
+  // ── Tab bar global ──
+  if (accion === "ir") {
+    const destino = boton.dataset.destino;
+    if (destino === "alumnos") {
+      alumnoActual = null;
+      ejercicios = [];
+      vista = "inicio";
+      render();
+    }
+    if (destino === "actividad") {
+      vista = "actividad";
+      cargarActividad();
+    }
+    if (destino === "ajustes") {
+      vista = "ajustes";
+      render();
+    }
+  }
+
+  // ── Segmented control del alumno ──
+  if (accion === "seccion") {
+    seccionAlumno = boton.dataset.seccion;
+    if (seccionAlumno === "progreso") cargarResumen();
+    else render();
+  }
+
   if (accion === "abrir") {
     alumnoActual = alumnos.find(a => a.id === Number(boton.dataset.id));
     vista = "alumno";
+    seccionAlumno = "rutina";
     ultimoDia = "";
     cargarEjercicios();
   }
@@ -542,7 +790,8 @@ document.addEventListener("click", async (evento) => {
 
   if (accion === "volver-alumno") {
     vista = "alumno";
-    render();
+    if (seccionAlumno === "progreso") cargarResumen();
+    else render();
   }
 
   if (accion === "nuevo") {
@@ -560,7 +809,6 @@ document.addEventListener("click", async (evento) => {
     render();
   }
 
-  // ── Ver el progreso de un ejercicio ──
   if (accion === "ver-progreso") {
     ejercicioActual = ejercicios.find(e => e.id === Number(boton.dataset.id));
     vista = "progreso";
@@ -638,10 +886,12 @@ document.addEventListener("click", async (evento) => {
     aviso = `¡Sesión guardada! ${filas.length} series registradas 💪`;
     sesionDatos = {};
     vista = "alumno";
+    seccionAlumno = "rutina";
     render();
   }
 
   if (accion === "salir") {
+    if (!confirm("¿Cerrar sesión?")) return;
     await db.auth.signOut();
     usuario = null;
     alumnos = [];
@@ -653,7 +903,7 @@ document.addEventListener("click", async (evento) => {
 });
 
 // ─────────────────────────────────────────
-// 6b. ESCRIBIR EN LA SESIÓN
+// 7b. ESCRIBIR EN LA SESIÓN
 // ─────────────────────────────────────────
 document.addEventListener("input", (evento) => {
   const campo = evento.target;
@@ -672,7 +922,7 @@ document.addEventListener("input", (evento) => {
 });
 
 // ─────────────────────────────────────────
-// 7. FORMULARIOS
+// 8. FORMULARIOS
 // ─────────────────────────────────────────
 document.addEventListener("submit", async (evento) => {
   evento.preventDefault();
@@ -755,7 +1005,7 @@ document.addEventListener("submit", async (evento) => {
 });
 
 // ─────────────────────────────────────────
-// 8. CARGAR DATOS
+// 9. CARGAR DATOS
 // ─────────────────────────────────────────
 async function cargarAlumnos() {
   cargando = true;
@@ -825,7 +1075,6 @@ async function cargarUltimaVez() {
   render();
 }
 
-// Trae TODO el historial de un ejercicio, del más viejo al más nuevo
 async function cargarHistorial() {
   cargandoHistorial = true;
   historial = [];
@@ -848,8 +1097,69 @@ async function cargarHistorial() {
   render();
 }
 
+async function cargarResumen() {
+  cargandoResumen = true;
+  render();
+
+  const respuesta = await db
+    .from("registros")
+    .select("*")
+    .eq("alumno_id", alumnoActual.id)
+    .order("fecha")
+    .order("serie");
+
+  if (respuesta.error) {
+    alert("No se pudo cargar el progreso: " + respuesta.error.message);
+  } else {
+    const registros = respuesta.data;
+    resumen = {
+      porEjercicio: ejercicios.map(ej => ({
+        ej,
+        sesiones: agruparPorFecha(registros.filter(r => r.ejercicio_id === ej.id)),
+      })),
+      fechas: [...new Set(registros.map(r => r.fecha))].sort(),
+    };
+  }
+
+  cargandoResumen = false;
+  render();
+}
+
+// Trae los entrenamientos de TODOS los alumnos.
+// "ejercicios(dia)" = "traeme también el día del ejercicio relacionado"
+// (Supabase sigue la conexión ejercicio_id → ejercicios solito)
+async function cargarActividad() {
+  cargandoActividad = true;
+  render();
+
+  const respuesta = await db
+    .from("registros")
+    .select("fecha, alumno_id, ejercicios(dia)")
+    .order("fecha", { ascending: false })
+    .limit(2000);
+
+  if (respuesta.error) {
+    alert("No se pudo cargar la actividad: " + respuesta.error.message);
+  } else {
+    // Una "sesión" = un alumno en una fecha
+    const grupos = {};
+    respuesta.data.forEach(r => {
+      const clave = r.fecha + "|" + r.alumno_id;
+      if (!grupos[clave]) {
+        grupos[clave] = { fecha: r.fecha, alumnoId: r.alumno_id, dias: new Set(), series: 0 };
+      }
+      grupos[clave].series++;
+      if (r.ejercicios) grupos[clave].dias.add(r.ejercicios.dia);
+    });
+    actividad = Object.values(grupos);
+  }
+
+  cargandoActividad = false;
+  render();
+}
+
 // ─────────────────────────────────────────
-// 9. ARRANQUE
+// 10. ARRANQUE
 // ─────────────────────────────────────────
 async function iniciar() {
   const sesion = await db.auth.getSession();
