@@ -813,3 +813,17 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
   85%  { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(12px); }
 }
+/* ── Rediseño 3: Rutina con chips de días ── */
+.chips-dias { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 4px -16px 16px; padding: 0 16px; }
+.chips-dias::-webkit-scrollbar { display: none; }
+.chip-dia { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.chip-dia.sugerido { border-color: var(--lime); }
+.chip-dia.on { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.chip-dia .punto { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); }
+.chip-dia.on .punto { background: var(--ink); }
+
+.dia-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.dia-titulo h3 { margin: 0; font-size: 18px; font-weight: 800; }
+.le-toca { font-size: 12px; font-weight: 800; color: var(--lime); white-space: nowrap; }
+.btn.iniciar { margin-top: 16px; }
+.acciones-seccion + .chips-dias { margin-top: 16px; }

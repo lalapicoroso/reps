@@ -424,7 +424,7 @@ function tabRutina() {
     <div class="acciones-seccion">
       <button class="link" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
     </div>
-    ${seccionRutina()}
+     ${seccionRutinaChips()}
   `;
 }
 
@@ -898,6 +898,8 @@ document.addEventListener("click", async (evento) => {
     }
 
     aviso = `¡Sesión guardada! ${filas.length} series registradas 💪`;
+    diasUltimaSesion = { alumnoId: alumnoActual.id, dias: [sesionDia] };  // ahora le toca el día siguiente
+    diaElegido = null;
     sesionDatos = {};
     vista = "alumno";
     seccionAlumno = "rutina";
