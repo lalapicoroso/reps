@@ -571,3 +571,48 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
   border: 1px solid color-mix(in srgb, #ff7a6b 40%, var(--line));
 }
 .version { text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
+/* ── Lección 11: Importar ── */
+.importar { display: flex; flex-direction: column; gap: 12px; }
+
+/* Pasos numerados */
+.card.pasos { display: block; }
+.pasos ol {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+/* Zona para subir archivo: el input real queda invisible encima */
+.carga {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 16px;
+  background: var(--surface);
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.carga:hover { border-color: var(--lime); }
+.carga input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.carga-titulo { font-weight: 800; font-size: 16px; }
+.carga-titulo small { font-weight: 600; font-size: 13px; color: var(--muted); margin-left: 4px; }
+.carga-estado { font-size: 14px; color: var(--muted); }
+
+.carga.ok { border-style: solid; border-color: color-mix(in srgb, var(--lime) 50%, var(--line)); }
+.carga.ok .carga-estado { color: var(--lime); font-weight: 700; }
+.carga.mal { border-color: #ff7a6b; }
+.carga.mal .carga-estado { color: #ff7a6b; }
+
+/* Vista previa */
+.card.previa { display: block; }
+.card.previa h3 { font-size: 16px; margin-bottom: 6px; }
+.card.previa p { color: var(--text); line-height: 1.8; margin: 0; }
+.previa .presc { margin-left: 6px; }

@@ -475,6 +475,7 @@ function tabPerfil(alumno) {
         <div class="card info"><div><p>Día</p><h3>${alumno.dia || "—"}</h3></div></div>
       </div>
       <button class="btn secundario" data-accion="editar">✏️ Editar alumno</button>
+      <button class="btn secundario" data-accion="abrir-importar">📥 Importar desde planilla</button>
     </div>
   `;
 }
@@ -718,6 +719,7 @@ function render() {
   else if (vista === "nuevo-ejercicio") html = pantallaNuevoEjercicio();
   else if (vista === "sesion")          html = pantallaSesion();
   else if (vista === "progreso")        html = pantallaProgreso();
+  else if (vista === "importar")        html = pantallaImportar();
   else                                  html = pantallaInicio();
 
   // Agregamos la tab bar al final, solo donde corresponde
