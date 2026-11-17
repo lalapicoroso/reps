@@ -127,3 +127,89 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
 }
 
 .card.info p { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+/* ── Lección 5 ── */
+
+/* Header con logo + Salir */
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.top .logo { margin-bottom: 0; }
+
+.salir {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.salir:hover { color: var(--text); border-color: var(--muted); }
+
+/* Pantalla de login */
+.login { max-width: 400px; margin: 12vh auto 0; }
+
+/* Formularios */
+.form { display: flex; flex-direction: column; gap: 14px; }
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.form input {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  font-size: 16px;         /* 16px evita que el iPhone haga zoom al tocar el input */
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: normal;
+  outline: none;
+}
+.form input:focus { border-color: var(--lime); }
+
+.dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.error { color: #ff7a6b; font-size: 14px; margin: 0; }
+.error:empty { display: none; }   /* si no hay mensaje, no ocupa lugar */
+
+/* Botones */
+.btn {
+  width: 100%;
+  background: var(--lime);
+  color: var(--bg);
+  border: 0;
+  border-radius: 12px;
+  padding: 15px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+.btn.secundario {
+  background: none;
+  color: var(--lime);
+  border: 1px dashed var(--line);
+  margin-bottom: 12px;
+}
+.btn.secundario:hover { border-color: var(--lime); }
+
+.titulo { font-size: 28px; font-weight: 900; margin: 0 0 20px; }
+.vacio  { color: var(--muted); text-align: center; padding: 32px 0; line-height: 1.5; }
+.card.info { margin-bottom: 16px; }
