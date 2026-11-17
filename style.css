@@ -704,3 +704,4 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
   outline: none;
 }
 .form textarea:focus { border-color: var(--lime); }
+.card.nutri { margin-bottom: 12px; }
