@@ -52,12 +52,9 @@ document.addEventListener("click", async (evento) => {
   }
 
   // Borrar alumno (con todo lo suyo)
-  if (accion === "borrar-alumno") {
+  // (el sheet de "¿Borrar a …?" lo abre avisos.js; esto corre cuando tocás "Sí, borrar")
+  if (accion === "confirmar-borrar-alumno") {
     const nombre = alumnoActual.nombre;
-    const seguro = confirm(
-      `¿Borrar a ${nombre}?\n\nTambién se borran su rutina, su historial y sus objetivos. No se puede deshacer.`
-    );
-    if (!seguro) return;
 
     boton.disabled = true;
     boton.textContent = "Borrando…";
@@ -77,6 +74,7 @@ document.addEventListener("click", async (evento) => {
     ejercicios = [];
     vista = "inicio";
     render();
+    mostrarToast(`${nombre} fue eliminado de Reps`);
   }
 });
 

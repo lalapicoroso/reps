@@ -238,6 +238,7 @@ function pantallaHoy() {
   return `
     <h1 class="titulo">Hoy</h1>
     <p class="subtitulo">${fechaDeHoy()}</p>
+    ${tarjetaBorrador()}
     ${agendaHoy()}
     ${actividadReciente()}
     ${texto ? `<div class="toast" role="status">${textoSeguro(texto)}</div>` : ""}

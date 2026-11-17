@@ -827,3 +827,49 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .le-toca { font-size: 12px; font-weight: 800; color: var(--lime); white-space: nowrap; }
 .btn.iniciar { margin-top: 16px; }
 .acciones-seccion + .chips-dias { margin-top: 16px; }
+/* ── Rediseño 4: Entrenamiento ── */
+.entreno-contexto { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; color: var(--lime); margin-bottom: 8px; }
+.pasos { display: inline-flex; align-items: center; gap: 4px; }
+.pasos b { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--text); margin-right: 4px; letter-spacing: 0; }
+.pasos i { display: block; width: 10px; height: 6px; border-radius: 3px; background: var(--line); }
+.pasos i.hecho { background: color-mix(in srgb, var(--lime) 55%, var(--line)); }
+.pasos i.actual { width: 22px; background: var(--lime); }
+
+.ultima-vez { background: var(--surface2); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.ultima-vez p { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); }
+.ultima-vez strong { display: block; margin-top: 6px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; }
+
+.series.con-check { grid-template-columns: 36px 1fr 1fr 28px; }
+.series .check { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); color: transparent; font-size: 14px; font-weight: 900; transition: background 0.15s, color 0.15s; }
+.series .check.on { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+
+.nav-entreno { display: flex; gap: 8px; margin-top: 16px; }
+.nav-entreno .btn.secundario { width: 56px; flex: none; }
+.nav-entreno .btn { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.progreso-chico { margin-top: 20px; font-size: 13px; font-weight: 700; color: var(--muted); }
+
+/* Timer flotante de descanso */
+.timer { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 18px; border-radius: 999px; background: var(--surface2); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); animation: timer-entra 0.25s ease; }
+.app-ios .timer { bottom: 34px; }
+.timer-tiempo { display: flex; flex-direction: column; margin-right: 4px; }
+.timer-tiempo small { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; }
+.timer-tiempo b { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 20px; }
+.timer button { border: 0; border-radius: 999px; padding: 10px 12px; background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.timer button.on { background: var(--lime); color: var(--ink); }
+@keyframes timer-entra { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+/* Bottom sheet (se reutiliza para otras confirmaciones) */
+.sheet-fondo { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.6); animation: fondo-entra 0.2s ease; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; background: var(--surface); border-top: 1px solid var(--line); border-radius: 24px 24px 0 0; padding: 12px 16px calc(24px + env(safe-area-inset-bottom)); animation: sheet-entra 0.25s ease; }
+.app-ios .sheet { padding-bottom: 40px; }
+.sheet-manija { align-self: center; width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin-bottom: 6px; }
+.sheet h2 { margin: 0; font-size: 22px; font-weight: 900; }
+.sheet p { margin: 0 0 6px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.sheet p strong { color: var(--text); }
+@keyframes sheet-entra { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fondo-entra { from { opacity: 0; } to { opacity: 1; } }
+/* Borrador: entrenamiento sin terminar */
+.card.borrador { display: flex; flex-direction: column; align-items: stretch; gap: 8px; border-color: var(--lime); margin-bottom: 20px; }
+.card.borrador h3 { margin: 0; }
+.card.borrador p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.card.borrador .borrador-tag { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--lime); }

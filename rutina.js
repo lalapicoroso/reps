@@ -67,10 +67,19 @@ function seccionRutinaChips() {
   const actual = diaElegido !== null && diaElegido < dias.length ? diaElegido : sugerido;
   const { nombre } = partesDelDia(dias[actual], actual);
 
+  // Si dos días se llaman igual ("Día 1" y "Día 1"), le sumamos el nombre para distinguirlos
+  const cortos = dias.map((dia, i) => partesDelDia(dia, i).corto);
+  const etiqueta = (dia, i) => {
+    const repetido = cortos.filter(c => c === cortos[i]).length > 1;
+    if (!repetido) return cortos[i];
+    const primeraParte = partesDelDia(dia, i).nombre.split(/\s[·+\-–]\s/)[0];
+    return `${cortos[i]} · ${primeraParte}`;
+  };
+
   const chips = dias.map((dia, i) => `
     <button class="chip-dia ${i === actual ? "on" : ""} ${i === sugerido ? "sugerido" : ""}"
             type="button" data-accion="elegir-dia" data-dia="${i}" aria-pressed="${i === actual}">
-      ${partesDelDia(dia, i).corto}
+      ${etiqueta(dia, i)}
       ${i === sugerido ? `<span class="punto" aria-label="le toca hoy"></span>` : ""}
     </button>
   `).join("");
@@ -89,6 +98,7 @@ function seccionRutinaChips() {
   `).join("");
 
   return `
+    ${tarjetaBorrador(alumnoActual.id)}
     <div class="chips-dias">${chips}</div>
     <div class="dia-titulo">
       <h3>${nombre}</h3>

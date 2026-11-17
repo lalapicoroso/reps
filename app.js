@@ -726,7 +726,7 @@ function render() {
   else if (vista === "nuevo")           html = pantallaNuevo();
   else if (vista === "editar")          html = pantallaEditar(alumnoActual);
   else if (vista === "nuevo-ejercicio") html = pantallaNuevoEjercicio();
-  else if (vista === "sesion")          html = pantallaSesion();
+  else if (vista === "sesion")          html = pantallaEntreno();
   else if (vista === "progreso")        html = pantallaProgreso();
   else if (vista === "importar")        html = pantallaImportar();
   else if (vista === "editar-nutricion") html = pantallaEditarNutricion(alumnoActual);
@@ -829,10 +829,9 @@ document.addEventListener("click", async (evento) => {
     cargarHistorial();
   }
 
-  if (accion === "borrar-ejercicio") {
+  if (accion === "confirmar-borrar-ejercicio") {
     const id = Number(boton.dataset.id);
     const ej = ejercicios.find(e => e.id === id);
-    if (!confirm(`¿Borrar "${ej.nombre}"? También se borra su historial.`)) return;
 
     const respuesta = await db.from("ejercicios").delete().eq("id", id);
     if (respuesta.error) {
@@ -841,6 +840,7 @@ document.addEventListener("click", async (evento) => {
     }
     ejercicios = ejercicios.filter(e => e.id !== id);
     render();
+    mostrarToast(`✓ ${ej.nombre} quitado de la rutina`);
   }
 
   if (accion === "entrenar") {
@@ -900,14 +900,14 @@ document.addEventListener("click", async (evento) => {
     aviso = `¡Sesión guardada! ${filas.length} series registradas 💪`;
     diasUltimaSesion = { alumnoId: alumnoActual.id, dias: [sesionDia] };  // ahora le toca el día siguiente
     diaElegido = null;
+    borrarBorrador();   // ya está guardado de verdad: el borrador no hace falta
     sesionDatos = {};
     vista = "alumno";
     seccionAlumno = "rutina";
     render();
   }
 
-  if (accion === "salir") {
-    if (!confirm("¿Cerrar sesión?")) return;
+  if (accion === "confirmar-salir") {
     await db.auth.signOut();
     usuario = null;
     alumnos = [];
