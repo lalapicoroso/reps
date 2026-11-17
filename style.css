@@ -390,3 +390,71 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
 
 /* Evita que el iPhone haga "rebote" de color blanco al scrollear de más */
 html { background: var(--bg); }
+/* ── Lección 9: Progreso ── */
+
+/* El ejercicio ahora es tocable */
+button.ej-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ej-texto { flex: 1; min-width: 0; }
+.chev { color: var(--muted); font-size: 24px; line-height: 1; transition: color 0.15s, transform 0.15s; }
+button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
+
+.presc-grande {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--lime);
+  font-size: 14px;
+  margin: -12px 0 20px;
+}
+
+/* Tarjetitas de números */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+}
+.stat .v { font-size: 24px; font-weight: 900; line-height: 1.1; }
+.stat .v.sube { color: var(--lime); }
+.stat .v.baja { color: #ff7a6b; }
+.stat .k { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
+
+/* Gráfico */
+.grafico-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 4px 0;
+}
+.grafico { width: 100%; height: auto; display: block; }
+.grafico .linea { fill: none; stroke: var(--lime); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.grafico .area { fill: var(--lime); opacity: 0.12; }
+.grafico circle { fill: var(--bg); stroke: var(--lime); stroke-width: 2; }
+.grafico circle.ultimo { fill: var(--lime); }
+.grafico .guia { stroke: var(--line); stroke-dasharray: 3 4; }
+.grafico .eje { fill: var(--muted); font-size: 11px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+/* Historial de sesiones */
+.historial { display: flex; flex-direction: column; gap: 10px; }
+.card.sesion-hist { display: block; }
+.sh-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sesion-hist h3 { font-size: 16px; text-transform: capitalize; }
+.card .series-hist {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--text);
+  font-size: 14px;
+  margin-top: 8px;
+}
+.pr { font-size: 12px; font-weight: 800; color: var(--lime); white-space: nowrap; }

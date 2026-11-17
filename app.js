@@ -10,24 +10,29 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // 2. ESTADO
 // ─────────────────────────────────────────
 let usuario = null;
-let vista = "inicio";        // "login" | "inicio" | "alumno" | "nuevo" | "editar" | "nuevo-ejercicio" | "sesion"
+let vista = "inicio";        // "login" | "inicio" | "alumno" | "nuevo" | "editar" | "nuevo-ejercicio" | "sesion" | "progreso"
 let vistaAnterior = null;
 let alumnos = [];
 let cargando = true;
 let error = null;
 let alumnoActual = null;
-let aviso = "";              // mensaje de éxito que se muestra una vez
+let aviso = "";
 
 let ejercicios = [];
 let cargandoEjercicios = false;
 let ultimoDia = "";
 
 // Sesión de entrenamiento
-let sesionDia = null;        // nombre del día que se entrena
-let sesionEjercicios = [];   // ejercicios de ese día
-let sesionDatos = {};        // lo anotado: { idEjercicio: { nroSerie: { kg, reps } } }
-let ultimaVez = {};          // { idEjercicio: [registros de la última vez] }
+let sesionDia = null;
+let sesionEjercicios = [];
+let sesionDatos = {};
+let ultimaVez = {};
 let cargandoSesion = false;
+
+// Progreso de un ejercicio
+let ejercicioActual = null;
+let historial = [];          // sesiones agrupadas por fecha
+let cargandoHistorial = false;
 
 // ─────────────────────────────────────────
 // 3. AYUDANTES
@@ -58,7 +63,6 @@ function agruparPorDia(lista) {
   return grupos;
 }
 
-// Fecha de hoy en formato "2026-11-17" (el que usa la base)
 function hoy() {
   const d = new Date();
   const mes = String(d.getMonth() + 1).padStart(2, "0");
@@ -66,20 +70,27 @@ function hoy() {
   return `${d.getFullYear()}-${mes}-${dia}`;
 }
 
-// "2026-11-17" → "17/11"
 function fechaCorta(iso) {
   const partes = iso.split("-");
   return `${partes[2]}/${partes[1]}`;
 }
 
-// Convierte lo que se escribió en un número: "62,5" → 62.5 / "" → null
+// "2026-11-17" → "lun, 17 nov"
+function fechaLarga(iso) {
+  return new Date(iso + "T12:00").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" });
+}
+
+// 57.49999 → 57.5 / 60 → 60
+function redondear(n) {
+  return Math.round(n * 10) / 10;
+}
+
 function numero(valor) {
   if (valor === undefined || valor === null || valor === "") return null;
   const n = parseFloat(String(valor).replace(",", "."));
   return isNaN(n) ? null : n;
 }
 
-// ¿Cuántas series tienen algo anotado?
 function seriesHechas() {
   let total = 0;
   Object.values(sesionDatos).forEach(series => {
@@ -90,9 +101,79 @@ function seriesHechas() {
   return total;
 }
 
-// ¿Cuántas series tiene el día en total?
 function seriesTotales() {
   return sesionEjercicios.reduce((suma, ej) => suma + ej.series, 0);
+}
+
+// Agrupa los registros por fecha y calcula datos de cada sesión:
+// [serie, serie, serie...] → [ { fecha, series, maxKg, volumen }, ... ]
+function agruparPorFecha(registros) {
+  const porFecha = {};
+  registros.forEach(r => {
+    if (!porFecha[r.fecha]) porFecha[r.fecha] = [];
+    porFecha[r.fecha].push(r);
+  });
+
+  return Object.keys(porFecha).sort().map(fecha => {
+    const series = porFecha[fecha].sort((a, b) => a.serie - b.serie);
+    const kgs = series.map(s => s.kg).filter(k => k !== null);
+    return {
+      fecha,
+      series,
+      maxKg: kgs.length ? Math.max(...kgs) : null,
+      // volumen = suma de (kg × reps) de todas las series
+      volumen: series.reduce((total, s) => total + (s.kg || 0) * (s.reps || 0), 0),
+    };
+  });
+}
+
+// ─────────────────────────────────────────
+// 3b. GRÁFICO (SVG dibujado con código)
+// ─────────────────────────────────────────
+function grafico(sesiones) {
+  const puntos = sesiones.filter(s => s.maxKg !== null);
+
+  if (puntos.length < 2) {
+    return `<p class="vacio">Con 2 sesiones o más vas a ver el gráfico 📈</p>`;
+  }
+
+  // Tamaño del dibujo y márgenes (como un frame con padding)
+  const W = 358, H = 170;
+  const m = { arriba: 20, derecha: 16, abajo: 28, izquierda: 40 };
+
+  const valores = puntos.map(p => p.maxKg);
+  let min = Math.min(...valores);
+  let max = Math.max(...valores);
+  if (min === max) { min -= 5; max += 5; }   // si todo es igual, damos aire
+
+  // Convierten "número de sesión" y "kg" en coordenadas x/y del dibujo
+  const x = i => m.izquierda + (i / (puntos.length - 1)) * (W - m.izquierda - m.derecha);
+  const y = kg => m.arriba + (1 - (kg - min) / (max - min)) * (H - m.arriba - m.abajo);
+
+  // Una línea SVG se escribe como "M x,y L x,y L x,y" (Mover, Línea, Línea...)
+  const linea = puntos.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.maxKg).toFixed(1)}`).join(" ");
+  const area = `${linea} L${x(puntos.length - 1).toFixed(1)},${H - m.abajo} L${x(0).toFixed(1)},${H - m.abajo} Z`;
+
+  const circulos = puntos.map((p, i) => {
+    const esUltimo = i === puntos.length - 1;
+    return `<circle cx="${x(i).toFixed(1)}" cy="${y(p.maxKg).toFixed(1)}" r="${esUltimo ? 5 : 3.5}" class="${esUltimo ? "ultimo" : ""}"/>`;
+  }).join("");
+
+  const ultimoPunto = puntos[puntos.length - 1];
+
+  return `
+    <svg class="grafico" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución del peso máximo por sesión">
+      <line class="guia" x1="${m.izquierda}" x2="${W - m.derecha}" y1="${y(max)}" y2="${y(max)}"/>
+      <line class="guia" x1="${m.izquierda}" x2="${W - m.derecha}" y1="${y(min)}" y2="${y(min)}"/>
+      <text class="eje" x="${m.izquierda - 8}" y="${y(max) + 4}" text-anchor="end">${redondear(max)}</text>
+      <text class="eje" x="${m.izquierda - 8}" y="${y(min) + 4}" text-anchor="end">${redondear(min)}</text>
+      <text class="eje" x="${x(0)}" y="${H - 8}" text-anchor="start">${fechaCorta(puntos[0].fecha)}</text>
+      <text class="eje" x="${x(puntos.length - 1)}" y="${H - 8}" text-anchor="end">${fechaCorta(ultimoPunto.fecha)}</text>
+      <path class="area" d="${area}"/>
+      <path class="linea" d="${linea}"/>
+      ${circulos}
+    </svg>
+  `;
 }
 
 // ─────────────────────────────────────────
@@ -160,7 +241,6 @@ function seccionRutina() {
     return `<p class="vacio">Todavía no tiene rutina.<br>Agregá el primer ejercicio 👆</p>`;
   }
 
-  // data-dia="${i}" guarda la POSICIÓN del día (0, 1, 2…)
   return dias.map((dia, i) => `
     <div class="dia-header">
       <h3 class="sec-title">${dia}</h3>
@@ -169,10 +249,13 @@ function seccionRutina() {
     <div class="lista">
       ${grupos[dia].map(ej => `
         <div class="card ejercicio">
-          <div class="ej-info">
-            <h3>${ej.nombre}</h3>
-            <p class="presc">${ej.series} × ${ej.reps || "—"}</p>
-          </div>
+          <button class="ej-info" data-accion="ver-progreso" data-id="${ej.id}">
+            <span class="ej-texto">
+              <h3>${ej.nombre}</h3>
+              <p class="presc">${ej.series} × ${ej.reps || "—"}</p>
+            </span>
+            <span class="chev">›</span>
+          </button>
           <button class="borrar" data-accion="borrar-ejercicio" data-id="${ej.id}" aria-label="Borrar ${ej.nombre}">✕</button>
         </div>
       `).join("")}
@@ -280,7 +363,6 @@ function pantallaNuevoEjercicio() {
   `;
 }
 
-// La pantalla del gimnasio
 function pantallaSesion() {
   const volver = `<button class="volver" data-accion="salir-sesion">← ${alumnoActual.nombre}</button>`;
 
@@ -291,13 +373,11 @@ function pantallaSesion() {
   const tarjetas = sesionEjercicios.map(ej => {
     const anterior = ultimaVez[ej.id] || [];
 
-    // Texto "Última (10/11): 60×10 · 60×9 · 55×10"
     const textoAnterior = anterior.length
       ? `Última (${fechaCorta(anterior[0].fecha)}): ` +
         anterior.map(r => `${r.kg ?? "–"}×${r.reps ?? "–"}`).join(" · ")
       : "Primera vez con este ejercicio 🎉";
 
-    // Una fila por serie: número | kg | reps
     let filas = "";
     for (let s = 1; s <= ej.series; s++) {
       const previa = anterior.find(r => r.serie === s) || {};
@@ -348,6 +428,68 @@ function pantallaSesion() {
   `;
 }
 
+// La pantalla de progreso de un ejercicio
+function pantallaProgreso() {
+  const ej = ejercicioActual;
+  const volver = `<button class="volver" data-accion="volver-alumno">← ${alumnoActual.nombre}</button>`;
+  const titulo = `
+    <h1 class="titulo">${ej.nombre}</h1>
+    <p class="presc-grande">${ej.series} × ${ej.reps || "—"} · ${ej.dia}</p>
+  `;
+
+  if (cargandoHistorial) {
+    return volver + titulo + `<p class="subtitulo">Cargando historial…</p>`;
+  }
+
+  if (!historial.length) {
+    return volver + titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.<br>Tocá "Entrenar ▶" en la rutina para empezar 💪</p>`;
+  }
+
+  // ── Números destacados ──
+  const maximos = historial.map(s => s.maxKg).filter(v => v !== null);
+  const record = maximos.length ? Math.max(...maximos) : null;
+  const ultima = historial[historial.length - 1];
+  const anterior = historial[historial.length - 2];
+
+  let cambio = "—";
+  let claseCambio = "";
+  if (anterior && ultima.maxKg !== null && anterior.maxKg !== null) {
+    const diferencia = redondear(ultima.maxKg - anterior.maxKg);
+    if (diferencia > 0)      { cambio = `+${diferencia}`; claseCambio = "sube"; }
+    else if (diferencia < 0) { cambio = `${diferencia}`;  claseCambio = "baja"; }
+    else                     { cambio = "="; }
+  }
+
+  // ── Lista de sesiones (la más nueva primero) ──
+  const sesiones = [...historial].reverse().map(s => `
+    <div class="card sesion-hist">
+      <div class="sh-top">
+        <h3>${fechaLarga(s.fecha)}</h3>
+        ${record !== null && s.maxKg === record ? `<span class="pr">🏆 Récord</span>` : ""}
+      </div>
+      <p class="series-hist">${s.series.map(r => `${r.kg ?? "–"}×${r.reps ?? "–"}`).join(" · ")}</p>
+      <p>Volumen: ${redondear(s.volumen)} kg</p>
+    </div>
+  `).join("");
+
+  return `
+    ${volver}
+    ${titulo}
+
+    <div class="stats">
+      <div class="stat"><div class="v">${record !== null ? redondear(record) : "—"}</div><div class="k">Récord (kg)</div></div>
+      <div class="stat"><div class="v">${historial.length}</div><div class="k">Sesiones</div></div>
+      <div class="stat"><div class="v ${claseCambio}">${cambio}</div><div class="k">Vs. anterior (kg)</div></div>
+    </div>
+
+    <h3 class="sec-title">Peso máximo por sesión</h3>
+    <div class="grafico-card">${grafico(historial)}</div>
+
+    <h3 class="sec-title">Historial</h3>
+    <div class="historial">${sesiones}</div>
+  `;
+}
+
 // ─────────────────────────────────────────
 // 5. RENDER
 // ─────────────────────────────────────────
@@ -360,16 +502,15 @@ function render() {
   else if (vista === "editar")          app.innerHTML = pantallaEditar(alumnoActual);
   else if (vista === "nuevo-ejercicio") app.innerHTML = pantallaNuevoEjercicio();
   else if (vista === "sesion")          app.innerHTML = pantallaSesion();
+  else if (vista === "progreso")        app.innerHTML = pantallaProgreso();
   else                                  app.innerHTML = pantallaInicio();
 
-  aviso = "";  // el aviso se muestra una sola vez
+  aviso = "";
 
   if (vista !== vistaAnterior) window.scrollTo(0, 0);
   vistaAnterior = vista;
 }
 
-// Actualiza SOLO la barra de progreso, sin redibujar toda la pantalla
-// (si redibujáramos todo, el input perdería el foco mientras escribís)
 function actualizarProgreso() {
   const hechas = seriesHechas();
   const total = seriesTotales();
@@ -419,6 +560,13 @@ document.addEventListener("click", async (evento) => {
     render();
   }
 
+  // ── Ver el progreso de un ejercicio ──
+  if (accion === "ver-progreso") {
+    ejercicioActual = ejercicios.find(e => e.id === Number(boton.dataset.id));
+    vista = "progreso";
+    cargarHistorial();
+  }
+
   if (accion === "borrar-ejercicio") {
     const id = Number(boton.dataset.id);
     const ej = ejercicios.find(e => e.id === id);
@@ -433,7 +581,6 @@ document.addEventListener("click", async (evento) => {
     render();
   }
 
-  // ── Empezar a entrenar un día ──
   if (accion === "entrenar") {
     const grupos = agruparPorDia(ejercicios);
     const dias = Object.keys(grupos);
@@ -444,7 +591,6 @@ document.addEventListener("click", async (evento) => {
     cargarUltimaVez();
   }
 
-  // ── Salir de la sesión (avisa si hay algo sin guardar) ──
   if (accion === "salir-sesion") {
     if (seriesHechas() > 0 && !confirm("¿Salir sin guardar? Se pierde lo anotado.")) return;
     sesionDatos = {};
@@ -452,16 +598,14 @@ document.addEventListener("click", async (evento) => {
     render();
   }
 
-  // ── Guardar la sesión ──
   if (accion === "guardar-sesion") {
-    // Armamos una fila por cada serie que tenga algo anotado
     const filas = [];
     sesionEjercicios.forEach(ej => {
       const series = sesionDatos[ej.id] || {};
       Object.keys(series).forEach(nroSerie => {
         const kg = numero(series[nroSerie].kg);
         const reps = numero(series[nroSerie].reps);
-        if (kg === null && reps === null) return;  // serie vacía: la salteamos
+        if (kg === null && reps === null) return;
 
         filas.push({
           alumno_id: alumnoActual.id,
@@ -482,7 +626,6 @@ document.addEventListener("click", async (evento) => {
     boton.disabled = true;
     boton.textContent = "Guardando…";
 
-    // insert de VARIAS filas de una: le pasamos una lista
     const respuesta = await db.from("registros").insert(filas);
 
     if (respuesta.error) {
@@ -511,22 +654,19 @@ document.addEventListener("click", async (evento) => {
 
 // ─────────────────────────────────────────
 // 6b. ESCRIBIR EN LA SESIÓN
-//     "input" se dispara con cada tecla
 // ─────────────────────────────────────────
 document.addEventListener("input", (evento) => {
   const campo = evento.target;
-  if (!campo.dataset.campo) return;  // solo nos importan los inputs de series
+  if (!campo.dataset.campo) return;
 
   const ej = campo.dataset.ej;
   const serie = campo.dataset.serie;
 
-  // Creamos los "cajones" si no existen todavía
   if (!sesionDatos[ej]) sesionDatos[ej] = {};
   if (!sesionDatos[ej][serie]) sesionDatos[ej][serie] = {};
 
   sesionDatos[ej][serie][campo.dataset.campo] = campo.value;
 
-  // Feedback visual: el input se pinta cuando tiene algo
   campo.classList.toggle("lleno", campo.value !== "");
   actualizarProgreso();
 });
@@ -552,7 +692,6 @@ document.addEventListener("submit", async (evento) => {
     boton.textContent = textoOriginal;
   }
 
-  // ── LOGIN ──
   if (form.id === "form-login") {
     boton.textContent = "Entrando…";
     const respuesta = await db.auth.signInWithPassword({
@@ -566,7 +705,6 @@ document.addEventListener("submit", async (evento) => {
     cargarAlumnos();
   }
 
-  // ── NUEVO ALUMNO ──
   if (form.id === "form-nuevo") {
     boton.textContent = "Guardando…";
     const respuesta = await db.from("alumnos").insert(datos).select().single();
@@ -578,7 +716,6 @@ document.addEventListener("submit", async (evento) => {
     render();
   }
 
-  // ── EDITAR ALUMNO ──
   if (form.id === "form-editar") {
     boton.textContent = "Guardando…";
     const respuesta = await db
@@ -596,7 +733,6 @@ document.addEventListener("submit", async (evento) => {
     render();
   }
 
-  // ── NUEVO EJERCICIO ──
   if (form.id === "form-ejercicio") {
     boton.textContent = "Guardando…";
     const nuevo = {
@@ -660,7 +796,6 @@ async function cargarEjercicios() {
   render();
 }
 
-// Busca qué hizo la última vez en cada ejercicio del día
 async function cargarUltimaVez() {
   cargandoSesion = true;
   ultimaVez = {};
@@ -668,7 +803,6 @@ async function cargarUltimaVez() {
 
   const ids = sesionEjercicios.map(ej => ej.id);
 
-  // "registros de estos ejercicios, ANTERIORES a hoy, del más nuevo al más viejo"
   const respuesta = await db
     .from("registros")
     .select("*")
@@ -681,13 +815,36 @@ async function cargarUltimaVez() {
     sesionEjercicios.forEach(ej => {
       const suyos = respuesta.data.filter(r => r.ejercicio_id === ej.id);
       if (suyos.length) {
-        const ultimaFecha = suyos[0].fecha;  // el primero es el más reciente
+        const ultimaFecha = suyos[0].fecha;
         ultimaVez[ej.id] = suyos.filter(r => r.fecha === ultimaFecha);
       }
     });
   }
 
   cargandoSesion = false;
+  render();
+}
+
+// Trae TODO el historial de un ejercicio, del más viejo al más nuevo
+async function cargarHistorial() {
+  cargandoHistorial = true;
+  historial = [];
+  render();
+
+  const respuesta = await db
+    .from("registros")
+    .select("*")
+    .eq("ejercicio_id", ejercicioActual.id)
+    .order("fecha")
+    .order("serie");
+
+  if (respuesta.error) {
+    alert("No se pudo cargar el historial: " + respuesta.error.message);
+  } else {
+    historial = agruparPorFecha(respuesta.data);
+  }
+
+  cargandoHistorial = false;
   render();
 }
 
