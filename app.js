@@ -490,19 +490,21 @@ function pantallaAlumno(alumno) {
   else                                 contenido = tabRutina();
 
   return `
-    <button class="volver" data-accion="volver">← Alumnos</button>
+    <div class="alumno-fijo">
+      <button class="volver" data-accion="volver">← Alumnos</button>
 
-    ${aviso ? `<div class="aviso">${aviso}</div>` : ""}
-
-    <div class="alumno-head">
-      <div class="avatar">${iniciales(alumno.nombre)}</div>
-      <div>
-        <h1>${alumno.nombre}</h1>
-        <p>${detalle(alumno)}</p>
+      <div class="alumno-head">
+        <div class="avatar">${iniciales(alumno.nombre)}</div>
+        <div>
+          <h1>${alumno.nombre}</h1>
+          <p>${detalle(alumno)}</p>
+        </div>
       </div>
+
+      ${segmentado()}
     </div>
 
-    ${segmentado()}
+    ${aviso ? `<div class="aviso">${aviso}</div>` : ""}
 
     ${contenido}
   `;

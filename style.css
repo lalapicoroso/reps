@@ -893,3 +893,12 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .macros { gap: 16px; }
 .macro { row-gap: 4px; }
 .m-pct { margin-top: 0; }
+/* Header del alumno fijo arriba: volver + nombre + tabs */
+.alumno-fijo { position: sticky; top: 0; z-index: 10; background: var(--bg); margin: -20px -16px 16px; padding: 20px 16px 12px; border-bottom: 1px solid var(--line); }
+.alumno-fijo .volver { margin-bottom: 12px; }
+.alumno-fijo .segmentado { position: static; margin-bottom: 0; }
+/* Hoy: renovar la conexión con Google con un toque */
+.card.agenda-actualizar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.card.agenda-actualizar h3 { margin: 0; font-size: 16px; }
+.card.agenda-actualizar p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.card.agenda-actualizar .btn-chico { flex: none; padding: 10px 14px; }

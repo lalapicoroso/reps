@@ -144,6 +144,20 @@ function agendaHoy() {
     guardarToken(null);
   }
 
+  // Ya lo conectaste antes y solo venció el permiso de 1 hora → un botón chico
+  if (!tokenGoogle && yaConectoGoogle()) {
+    return `
+      <div class="card agenda-actualizar">
+        <div>
+          <h3>📅 Turnos de hoy</h3>
+          <p>Google pide renovar la conexión cada hora.</p>
+        </div>
+        <button class="btn-chico" data-accion="reconectar-google">↻ Actualizar</button>
+      </div>
+      ${agenda.error ? `<p class="error">${textoSeguro(agenda.error)}</p>` : ""}
+    `;
+  }
+
   if (!tokenGoogle) {
     return `
       <div class="card agenda-conectar">

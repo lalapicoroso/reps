@@ -97,7 +97,13 @@ function nombreCandidato(titulo) {
 // ─────────────────────────────────────────
 // 3. CONECTAR CON GOOGLE
 // ─────────────────────────────────────────
-function conectarGoogle() {
+// ¿Ya conectaste Google alguna vez en este dispositivo? (aunque el permiso de 1 hora haya vencido)
+function yaConectoGoogle() {
+  try { return localStorage.getItem("reps-google-ya") === "1"; } catch { return false; }
+}
+
+// silencioso = true → no vuelve a preguntar nada: Google ya sabe que diste permiso
+function conectarGoogle(silencioso) {
   if (typeof google === "undefined" || !google.accounts) {
     agenda.error = "No se cargó la librería de Google. Recargá la página.";
     render();
@@ -118,6 +124,7 @@ function conectarGoogle() {
         vence: Date.now() + (Number(respuesta.expires_in) - 60) * 1000,
       };
       guardarToken(tokenGoogle);
+      try { localStorage.setItem("reps-google-ya", "1"); } catch {}
       cargarAgenda();
     },
     error_callback: () => {
@@ -126,7 +133,7 @@ function conectarGoogle() {
     },
   });
 
-  cliente.requestAccessToken();
+  cliente.requestAccessToken(silencioso ? { prompt: "" } : {});
 }
 
 // ─────────────────────────────────────────
@@ -299,9 +306,15 @@ document.addEventListener("click", async (evento) => {
     conectarGoogle();   // se llama directo desde el clic, si no el navegador bloquea la ventana
   }
 
+  if (accion === "reconectar-google") {
+    agenda.error = "";
+    conectarGoogle(true);   // también directo desde el clic, para que no se bloquee la ventanita
+  }
+
   if (accion === "desconectar-google") {
     tokenGoogle = null;
     guardarToken(null);
+    try { localStorage.removeItem("reps-google-ya"); } catch {}
     agenda = nuevaAgenda();
     render();
   }
