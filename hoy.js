@@ -196,7 +196,7 @@ function agendaHoy() {
   `;
 
   if (!total) {
-    return resumen + `<p class="vacio">Hoy no tenés clases.<br>Buen momento para armar rutinas.</p>`;
+    return resumen + `${ilustracion("hoy")}<p class="vacio">Hoy no tenés clases.<br>Buen momento para armar rutinas.</p>`;
   }
 
   // Todos los turnos por horario, mezclando asignados y sin asignar

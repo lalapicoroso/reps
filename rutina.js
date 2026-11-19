@@ -61,6 +61,7 @@ function seccionRutinaChips() {
 
   if (!dias.length) {
     return `
+      ${ilustracion("rutina")}
       <p class="vacio">Sin rutina todavía.<br>Importá una planilla o armala ejercicio por ejercicio.</p>
       <button class="btn" data-accion="abrir-importar">Importar planilla</button>
       <button class="btn secundario" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>

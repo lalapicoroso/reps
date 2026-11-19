@@ -310,7 +310,7 @@ function pantallaInicio() {
 
   const contenido = alumnos.length
     ? `<div class="lista">${tarjetas}</div>`
-    : `<p class="vacio">Tu equipo comienza acá.<br>Sumá a tu primer alumno.</p>`;
+    : `${ilustracion("alumnos")}<p class="vacio">Tu equipo comienza acá.<br>Sumá a tu primer alumno.</p>`;
 
   return `
     ${encabezado()}
@@ -328,7 +328,7 @@ function pantallaActividad() {
     return titulo + `<p class="subtitulo">Cargando actividad…</p>`;
   }
   if (!actividad.length) {
-    return titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.</p>`;
+    return titulo + `${ilustracion("actividad")}<p class="vacio">Todavía no hay entrenamientos registrados.</p>`;
   }
 
   // Números destacados
@@ -493,7 +493,7 @@ function tabPerfil(alumno) {
       <button class="btn" data-accion="editar">Editar alumno</button>
       <button class="btn secundario" data-accion="abrir-importar">Importar desde planilla</button>
     </div>
-    <div class="acciones-final">
+    <div class="iniciar-fijo sin-degradado">
       <button class="btn peligro" data-accion="borrar-alumno">Borrar alumno</button>
     </div>
   `;

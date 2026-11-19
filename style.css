@@ -945,5 +945,11 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .entreno-objetivo .subtitulo { margin: 0; }
 .entreno-objetivo .pasos-ej { font-size: 12px; font-weight: 800; flex-wrap: wrap; justify-content: flex-end; }
 
-/* Perfil: "Borrar alumno" separado, al final de la pantalla */
-.acciones-final { margin-top: 64px; }
+/* Perfil: "Borrar alumno" fijo abajo, separado de las otras acciones.
+   Fondo liso (sin degradado) para que el borde rojo se vea limpio */
+.iniciar-fijo.sin-degradado { background: var(--bg); }
+.iniciar-fijo .btn.peligro { background: var(--bg); }
+
+/* Ilustraciones de los empty states */
+.ilu { display: block; width: 150px; height: 150px; margin: 24px auto 0; }
+.ilu + .vacio { padding-top: 4px; }

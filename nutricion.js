@@ -79,6 +79,7 @@ function tabNutricion(alumno) {
   // Estado vacío
   if (!tieneDatos) {
     return `
+      ${ilustracion("nutricion")}
       <p class="vacio">Sin objetivos todavía.<br>Definilos acá o importalos de una planilla.</p>
       <button class="btn" data-accion="editar-nutricion">Definir objetivos</button>
     `;
@@ -112,11 +113,13 @@ function tabNutricion(alumno) {
     </div>
     ${noCoinciden ? `<p class="nota-kcal">Ojo: los macros suman ${miles(sumaKcal)} kcal</p>` : ""}
 
-    <div class="lista">
+    <div class="lista con-iniciar-fijo">
       ${tarjetaTexto("Pasos", alumno.pasos)}
       ${tarjetaTexto("Agua", alumno.agua)}
       ${tarjetaTexto("Notas", alumno.notas_nutricion)}
-      <button class="btn secundario" data-accion="editar-nutricion">Editar objetivos</button>
+    </div>
+    <div class="iniciar-fijo">
+      <button class="btn" data-accion="editar-nutricion">Editar objetivos</button>
     </div>
   `;
 }
