@@ -760,6 +760,7 @@ function render() {
 
   if (vista !== vistaAnterior) window.scrollTo(0, 0);
   vistaAnterior = vista;
+  controlarPantalla();
 }
 
 function actualizarProgreso() {

@@ -396,3 +396,30 @@ document.addEventListener("touchend", (evento) => {
   else return;
   render();
 });
+
+// ─────────────────────────────────────────
+// PANTALLA SIEMPRE ENCENDIDA durante el entrenamiento
+// (Wake Lock: le pide al teléfono que no se bloquee mientras estás en la sesión)
+// ─────────────────────────────────────────
+let pantallaEncendida = null;   // el "permiso" que nos da el teléfono, o null
+
+async function controlarPantalla() {
+  if (!("wakeLock" in navigator)) return;   // teléfonos viejos: no hacemos nada
+
+  if (vista === "sesion" && !pantallaEncendida) {
+    try {
+      pantallaEncendida = await navigator.wakeLock.request("screen");
+      pantallaEncendida.addEventListener("release", () => { pantallaEncendida = null; });
+    } catch {}
+  }
+
+  if (vista !== "sesion" && pantallaEncendida) {
+    pantallaEncendida.release();
+    pantallaEncendida = null;
+  }
+}
+
+// Si salís de la app y volvés, el teléfono suelta el permiso solo: lo pedimos de nuevo
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") controlarPantalla();
+});
