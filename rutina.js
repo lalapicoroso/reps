@@ -107,8 +107,10 @@ function seccionRutinaChips() {
       <h3>${nombre}</h3>
       ${actual === sugerido ? `<span class="le-toca">Hoy</span>` : ""}
     </div>
-    <div class="lista">${tarjetas}</div>
-    <button class="btn secundario agregar-final" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
+    <div class="con-iniciar-fijo">
+      <div class="lista">${tarjetas}</div>
+      <button class="btn secundario agregar-final" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
+    </div>
     <div class="iniciar-fijo">
       <button class="btn" data-accion="entrenar" data-dia="${actual}">Iniciar entrenamiento</button>
     </div>
@@ -124,6 +126,7 @@ document.addEventListener("click", (evento) => {
   // Al abrir un alumno (desde Alumnos o desde un turno de Hoy): empieza en el día sugerido
   if (accion === "abrir") {
     diaElegido = null;
+    filtroProgreso = null;
     cargarUltimaSesionAlumno(Number(boton.dataset.id));
   }
 

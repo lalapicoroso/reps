@@ -920,27 +920,22 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .nav-entreno .btn.secundario { width: auto; flex: 1; margin-bottom: 0; }
 .ultima-vez .ultima-ayuda { display: block; margin-top: 6px; font-size: 14px; color: var(--text); }
 
-/* Rutina: "Iniciar entrenamiento" queda fijo arriba de la tab bar */
+/* Rutina: "Iniciar entrenamiento" fijo siempre arriba de la tab bar.
+   La lista termina justo en "+ Agregar ejercicio" (el padding deja lugar para el botón) */
 .btn.agregar-final { margin-top: 12px; }
 .iniciar-fijo {
-  position: sticky;
-  bottom: calc(64px + env(safe-area-inset-bottom));   /* queda apenas debajo de la tab bar, sin hueco */
-  z-index: 5;
-  margin: 0 -16px;
-  padding: 16px 16px 24px;
-  background: linear-gradient(to bottom, transparent, var(--bg) 35%);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+  z-index: 15;
+  padding: 16px 16px 12px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 30%);
 }
-.app-ios .iniciar-fijo { bottom: 94px; }
+.iniciar-fijo .btn { display: block; max-width: 608px; margin: 0 auto; }
+.app-ios .iniciar-fijo { bottom: 96px; }
+.con-iniciar-fijo { padding-bottom: 24px; }   /* junto con el espacio de la tab bar, deja lugar justo para el botón fijo */
 
-/* Progreso: constancia de los últimos 30 días */
-.constancia { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; }
-.const-top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 12px; }
-.const-top p { margin: 0; color: var(--muted); font-size: 14px; }
-.const-top strong { color: var(--text); font-size: 20px; font-weight: 900; margin-right: 2px; }
-.const-top strong.fecha { font-size: 15px; text-transform: capitalize; }
-.const-puntos { display: grid; grid-template-columns: repeat(30, 1fr); gap: 3px; }
-.const-puntos i { aspect-ratio: 1; border-radius: 50%; background: var(--line); }
-.const-puntos i.si { background: var(--lime); }
-.const-puntos i.hoy { box-shadow: 0 0 0 1.5px var(--muted); }
-.const-puntos i.si.hoy { box-shadow: 0 0 0 1.5px var(--lime); }
-.const-eje { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted); }
+/* Grupo de botones con el mismo aire entre todos (Perfil, detalle de ejercicio) */
+.acciones-grupo { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
+.acciones-grupo .btn { margin: 0; }

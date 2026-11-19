@@ -20,6 +20,7 @@ let error = null;
 let alumnoActual = null;
 let aviso = "";
 
+let filtroProgreso = null;      // en Progreso: null = todos los días, o el índice del día
 let seccionAlumno = "rutina";   // segmented control: "rutina" | "progreso" | "perfil"
 
 let ejercicios = [];
@@ -194,31 +195,6 @@ function grafico(sesiones) {
       <path class="linea" d="${linea}"/>
       ${circulos}
     </svg>
-  `;
-}
-
-// ── Constancia: los últimos 30 días, un punto por día que entrenó ──
-function constancia(fechas) {
-  const entreno = new Set(fechas);
-  let puntos = "";
-  let enElMes = 0;
-  for (let n = 29; n >= 0; n--) {
-    const dia = haceDias(n);
-    const si = entreno.has(dia);
-    if (si) enElMes++;
-    puntos += `<i class="${si ? "si" : ""} ${n === 0 ? "hoy" : ""}" title="${fechaCorta(dia)}"></i>`;
-  }
-  const ultima = fechas.length ? fechaLarga(fechas[fechas.length - 1]) : null;
-
-  return `
-    <div class="constancia">
-      <div class="const-top">
-        <p><strong>${enElMes}</strong> ${enElMes === 1 ? "entrenamiento" : "entrenamientos"} <span>en 30 días</span></p>
-        ${ultima ? `<p>Última: <strong class="fecha">${ultima}</strong></p>` : ""}
-      </div>
-      <div class="const-puntos" aria-label="${enElMes} entrenamientos en los últimos 30 días">${puntos}</div>
-      <div class="const-eje"><span>hace 30 días</span><span>hoy</span></div>
-    </div>
   `;
 }
 
@@ -466,10 +442,21 @@ function tabProgreso() {
     return `<p class="vacio">Primero la rutina, después los números 💪</p>`;
   }
 
-  const fechas = resumen.fechas;
-  const ultimaFecha = fechas.length ? fechaLarga(fechas[fechas.length - 1]) : "—";
 
-  const tarjetas = resumen.porEjercicio.map(({ ej, sesiones }) => {
+  // Filtro por día: Todos · Día 1 · Día 2 …
+  const dias = Object.keys(agruparPorDia(ejercicios));
+  if (filtroProgreso !== null && filtroProgreso >= dias.length) filtroProgreso = null;
+  const chip = (i, texto) => `
+    <button class="chip-dia ${filtroProgreso === i ? "on" : ""}" type="button"
+            data-accion="filtrar-progreso" data-dia="${i ?? ""}" aria-pressed="${filtroProgreso === i}">${texto}</button>`;
+  const chips = dias.length > 1
+    ? `<div class="chips-dias">${chip(null, "Todos")}${dias.map((d, i) => chip(i, partesDelDia(d, i).corto)).join("")}</div>`
+    : "";
+  const visibles = filtroProgreso === null
+    ? resumen.porEjercicio
+    : resumen.porEjercicio.filter(({ ej }) => ej.dia === dias[filtroProgreso]);
+
+  const tarjetas = visibles.map(({ ej, sesiones }) => {
     const maximos = sesiones.map(s => s.maxKg).filter(v => v !== null);
     const record = maximos.length ? redondear(Math.max(...maximos)) : null;
     const texto = sesiones.length
@@ -489,7 +476,7 @@ function tabProgreso() {
   }).join("");
 
   return `
-    ${constancia(fechas)}
+    ${chips}
 
     <h3 class="sec-title">Por ejercicio</h3>
     <div class="lista">${tarjetas}</div>
@@ -501,9 +488,10 @@ function tabPerfil(alumno) {
     <div class="lista">
       <div class="card info"><div><p>Objetivo</p><h3>${alumno.objetivo || "Sin objetivo todavía"}</h3></div></div>
       <div class="card info"><div><p>Fase</p><h3>${alumno.fase || "—"}</h3></div></div>
-      <button class="btn secundario" data-accion="editar">Editar alumno</button>
+    </div>
+    <div class="acciones-grupo">
+      <button class="btn" data-accion="editar">Editar alumno</button>
       <button class="btn secundario" data-accion="abrir-importar">Importar desde planilla</button>
-      <p class="sec-title zona-cuidado">Zona de cuidado</p>
       <button class="btn peligro" data-accion="borrar-alumno">Borrar alumno</button>
     </div>
   `;
@@ -681,8 +669,9 @@ function pantallaProgreso() {
 
   // Quitar el ejercicio vive acá (y no en la rutina) para que no se toque por accidente
   const quitar = `
-    <p class="sec-title zona-cuidado">Zona de cuidado</p>
-    <button class="btn peligro" data-accion="borrar-ejercicio" data-id="${ej.id}">Quitar de la rutina</button>
+    <div class="acciones-grupo">
+      <button class="btn peligro" data-accion="borrar-ejercicio" data-id="${ej.id}">Quitar de la rutina</button>
+    </div>
   `;
 
   if (!historial.length) {
@@ -808,6 +797,11 @@ document.addEventListener("click", async (evento) => {
   }
 
   // ── Segmented control del alumno ──
+  if (accion === "filtrar-progreso") {
+    filtroProgreso = boton.dataset.dia === "" ? null : Number(boton.dataset.dia);
+    render();
+  }
+
   if (accion === "seccion") {
     seccionAlumno = boton.dataset.seccion;
     if (seccionAlumno === "progreso") cargarResumen();
