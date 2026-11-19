@@ -3,7 +3,7 @@
 // Siempre le pregunta al servidor "¿hay algo nuevo?" (no-cache).
 // Si no hay señal, usa la copia guardada.
 // ─────────────────────────────────────────
-const CACHE = "reps-v52";   // al cambiar este nombre, se borran las copias viejas
+const CACHE = "reps-v53";   // al cambiar este nombre, se borran las copias viejas
 
 const ARCHIVOS = [
   "./",
@@ -23,6 +23,7 @@ const ARCHIVOS = [
   "personalidad.js",
   "ilustraciones.js",
   "fases.js",
+  "asignaciones.js",
   "manifest.webmanifest",
   "icons/icon-192.png",
 ];

@@ -24,6 +24,7 @@ function guardarAsignados() {
 async function abrirHoy() {
   vista = "actividad";
   await cargarAlumnos();          // primero los alumnos: los turnos se buscan por nombre
+  cargarAsignaciones();           // trae de la nube qué nombre del calendario es qué alumno
   if (typeof preguntarNombreSiFalta === "function") preguntarNombreSiFalta();
   cargarActividad();
   if (tokenGoogle) cargarAgenda();
@@ -272,8 +273,9 @@ document.addEventListener("click", (evento) => {
     const alumno = alumnos.find(a => a.id === Number(boton.dataset.id));
     asignados[boton.dataset.clave] = alumno.id;
     guardarAsignados();
-    mensajeHoy = `✓ Clase asignada a ${alumno.nombre}`;
+    guardarEnLaNube(boton.dataset.clave, alumno.id);
     render();
+    mostrarToast(`✓ Clase asignada a ${alumno.nombre}`);
   }
 
   if (accion === "ver-actividad") {

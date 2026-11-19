@@ -350,6 +350,7 @@ document.addEventListener("click", async (evento) => {
   if (accion === "ignorar-candidato") {
     ignorados.push(sinTildes(boton.dataset.nombre));
     guardarIgnorados();
+    guardarEnLaNube(sinTildes(boton.dataset.nombre), null);
     render();
   }
 });

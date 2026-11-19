@@ -117,4 +117,5 @@ document.addEventListener("submit", async (evento) => {
   ejercicioActual = respuesta.data;
   vista = "progreso";
   render();
+  mostrarToast("✓ Ejercicio actualizado");
 });

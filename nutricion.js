@@ -236,6 +236,6 @@ document.addEventListener("submit", async (evento) => {
   alumnos = alumnos.map(a => (a.id === alumnoActual.id ? respuesta.data : a));
   vista = "alumno";
   seccionAlumno = "nutricion";
-  aviso = "Objetivos guardados ✓";
   render();
+  mostrarToast("✓ Objetivos guardados");
 });

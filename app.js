@@ -911,7 +911,7 @@ document.addEventListener("click", async (evento) => {
     });
 
     if (!filas.length) {
-      alert("Anotá al menos una serie antes de guardar.");
+      mostrarToast("Anotá al menos una serie antes de guardar.");
       return;
     }
 
@@ -927,7 +927,7 @@ document.addEventListener("click", async (evento) => {
       return;
     }
 
-    aviso = `¡Sesión guardada! ${filas.length} series registradas 💪`;
+    const seriesGuardadas = filas.length;
     diasUltimaSesion = { alumnoId: alumnoActual.id, dias: [sesionDia] };  // ahora le toca el día siguiente
     diaElegido = null;
     borrarBorrador();   // ya está guardado de verdad: el borrador no hace falta
@@ -935,6 +935,7 @@ document.addEventListener("click", async (evento) => {
     vista = "alumno";
     seccionAlumno = "rutina";
     render();
+    mostrarToast(`✓ Sesión guardada · ${seriesGuardadas} ${seriesGuardadas === 1 ? "serie" : "series"} 💪`);
   }
 
   if (accion === "confirmar-salir") {
@@ -1012,8 +1013,13 @@ document.addEventListener("submit", async (evento) => {
 
     alumnos.push(respuesta.data);
     alumnos.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    vista = "inicio";
+    // Recién creado: lo abrimos en Rutina, que es lo próximo que vas a hacer
+    alumnoActual = respuesta.data;
+    ejercicios = [];
+    vista = "alumno";
+    seccionAlumno = "rutina";
     render();
+    mostrarToast(`✓ ${respuesta.data.nombre} creado. Ahora armá su rutina`);
   }
 
   if (form.id === "form-editar") {
@@ -1031,6 +1037,7 @@ document.addEventListener("submit", async (evento) => {
     alumnoActual = respuesta.data;
     vista = "alumno";
     render();
+    mostrarToast("✓ Cambios guardados");
   }
 
   if (form.id === "form-ejercicio") {
@@ -1051,6 +1058,7 @@ document.addEventListener("submit", async (evento) => {
     ultimoDia = nuevo.dia;
     vista = "alumno";
     render();
+    mostrarToast(`✓ ${respuesta.data.nombre} agregado a la rutina`);
   }
 });
 
