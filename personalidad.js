@@ -107,7 +107,7 @@ function abrirSheetNombre(primeraVez) {
   sheet.innerHTML = `
     <span class="sheet-manija"></span>
     <h2>${primeraVez ? "¡Hola! " : ""}¿Cómo te llamamos?</h2>
-    <p>Lo usamos para saludarte en Hoy. Lo podés cambiar cuando quieras en Ajustes.</p>
+    <p>Lo usamos para personalizar tu experiencia. Lo podés cambiar cuando quieras en Ajustes.</p>
     <form id="form-nombre" class="form">
       <input name="nombre" required maxlength="30" autocomplete="given-name"
              value="${textoSeguro(nombreTrainer())}" placeholder="Tu nombre">

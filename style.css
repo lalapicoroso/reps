@@ -916,3 +916,31 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
   .login-fondo { background: #000 url("video/login.jpg") center / cover; }
 }
 .sheet .form input { width: 100%; }
+/* ── 18/11: botones del entreno, rutina sin ✕, constancia ── */
+.nav-entreno .btn.secundario { width: auto; flex: 1; margin-bottom: 0; }
+.ultima-vez .ultima-ayuda { display: block; margin-top: 6px; font-size: 14px; color: var(--text); }
+
+/* Rutina: "Iniciar entrenamiento" queda fijo arriba de la tab bar */
+.btn.agregar-final { margin-top: 12px; }
+.iniciar-fijo {
+  position: sticky;
+  bottom: calc(64px + env(safe-area-inset-bottom));   /* queda apenas debajo de la tab bar, sin hueco */
+  z-index: 5;
+  margin: 0 -16px;
+  padding: 16px 16px 24px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 35%);
+}
+.app-ios .iniciar-fijo { bottom: 94px; }
+
+/* Progreso: constancia de los últimos 30 días */
+.constancia { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; }
+.const-top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 12px; }
+.const-top p { margin: 0; color: var(--muted); font-size: 14px; }
+.const-top strong { color: var(--text); font-size: 20px; font-weight: 900; margin-right: 2px; }
+.const-top strong.fecha { font-size: 15px; text-transform: capitalize; }
+.const-puntos { display: grid; grid-template-columns: repeat(30, 1fr); gap: 3px; }
+.const-puntos i { aspect-ratio: 1; border-radius: 50%; background: var(--line); }
+.const-puntos i.si { background: var(--lime); }
+.const-puntos i.hoy { box-shadow: 0 0 0 1.5px var(--muted); }
+.const-puntos i.si.hoy { box-shadow: 0 0 0 1.5px var(--lime); }
+.const-eje { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted); }

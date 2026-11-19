@@ -158,7 +158,7 @@ function grafico(sesiones) {
   const puntos = sesiones.filter(s => s.maxKg !== null);
 
   if (puntos.length < 2) {
-    return `<p class="vacio">Con 2 sesiones o más vas a ver el gráfico 📈</p>`;
+    return `<p class="vacio">Con una sesión más podés ver el progreso 📈</p>`;
   }
 
   const W = 358, H = 170;
@@ -194,6 +194,31 @@ function grafico(sesiones) {
       <path class="linea" d="${linea}"/>
       ${circulos}
     </svg>
+  `;
+}
+
+// ── Constancia: los últimos 30 días, un punto por día que entrenó ──
+function constancia(fechas) {
+  const entreno = new Set(fechas);
+  let puntos = "";
+  let enElMes = 0;
+  for (let n = 29; n >= 0; n--) {
+    const dia = haceDias(n);
+    const si = entreno.has(dia);
+    if (si) enElMes++;
+    puntos += `<i class="${si ? "si" : ""} ${n === 0 ? "hoy" : ""}" title="${fechaCorta(dia)}"></i>`;
+  }
+  const ultima = fechas.length ? fechaLarga(fechas[fechas.length - 1]) : null;
+
+  return `
+    <div class="constancia">
+      <div class="const-top">
+        <p><strong>${enElMes}</strong> ${enElMes === 1 ? "entrenamiento" : "entrenamientos"} <span>en 30 días</span></p>
+        ${ultima ? `<p>Última: <strong class="fecha">${ultima}</strong></p>` : ""}
+      </div>
+      <div class="const-puntos" aria-label="${enElMes} entrenamientos en los últimos 30 días">${puntos}</div>
+      <div class="const-eje"><span>hace 30 días</span><span>hoy</span></div>
+    </div>
   `;
 }
 
@@ -309,7 +334,7 @@ function pantallaInicio() {
 
   const contenido = alumnos.length
     ? `<div class="lista">${tarjetas}</div>`
-    : `<p class="vacio">Todavía no tenés alumnos.<br>Creá el primero 👆</p>`;
+    : `<p class="vacio">Tu equipo comienza acá.<br>Sumá a tu primer alumno.</p>`;
 
   return `
     ${encabezado()}
@@ -327,7 +352,7 @@ function pantallaActividad() {
     return titulo + `<p class="subtitulo">Cargando actividad…</p>`;
   }
   if (!actividad.length) {
-    return titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.<br>Cuando guardes una sesión, aparece acá 💪</p>`;
+    return titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.</p>`;
   }
 
   // Números destacados
@@ -430,12 +455,7 @@ function seccionRutina() {
 }
 
 function tabRutina() {
-  return `
-    <div class="acciones-seccion">
-      <button class="link" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
-    </div>
-     ${seccionRutinaChips()}
-  `;
+  return seccionRutinaChips();
 }
 
 function tabProgreso() {
@@ -443,7 +463,7 @@ function tabProgreso() {
     return `<p class="subtitulo">Calculando progreso…</p>`;
   }
   if (!ejercicios.length) {
-    return `<p class="vacio">Primero armá la rutina en <b>Rutina</b> 💪</p>`;
+    return `<p class="vacio">Primero la rutina, después los números 💪</p>`;
   }
 
   const fechas = resumen.fechas;
@@ -454,7 +474,7 @@ function tabProgreso() {
     const record = maximos.length ? redondear(Math.max(...maximos)) : null;
     const texto = sesiones.length
       ? `Récord ${record ?? "—"} kg · ${sesiones.length} ${sesiones.length === 1 ? "sesión" : "sesiones"}`
-      : "Sin registros todavía";
+      : "Todavía no hay registros.";
 
     return `
       <button class="card ej-prog" data-accion="ver-progreso" data-id="${ej.id}">
@@ -469,10 +489,7 @@ function tabProgreso() {
   }).join("");
 
   return `
-      <div class="resumen-hoy">
-      <p><strong>${fechas.length}</strong> ${fechas.length === 1 ? "entrenamiento" : "entrenamientos"}</p>
-      <p>Última: <strong class="fecha">${ultimaFecha}</strong></p>
-    </div>
+    ${constancia(fechas)}
 
     <h3 class="sec-title">Por ejercicio</h3>
     <div class="lista">${tarjetas}</div>
@@ -482,7 +499,7 @@ function tabProgreso() {
 function tabPerfil(alumno) {
   return `
     <div class="lista">
-      <div class="card info"><div><p>Objetivo</p><h3>${alumno.objetivo || "Sin definir"}</h3></div></div>
+      <div class="card info"><div><p>Objetivo</p><h3>${alumno.objetivo || "Sin objetivo todavía"}</h3></div></div>
       <div class="card info"><div><p>Fase</p><h3>${alumno.fase || "—"}</h3></div></div>
       <button class="btn secundario" data-accion="editar">Editar alumno</button>
       <button class="btn secundario" data-accion="abrir-importar">Importar desde planilla</button>
@@ -662,8 +679,14 @@ function pantallaProgreso() {
     return volver + titulo + `<p class="subtitulo">Cargando historial…</p>`;
   }
 
+  // Quitar el ejercicio vive acá (y no en la rutina) para que no se toque por accidente
+  const quitar = `
+    <p class="sec-title zona-cuidado">Zona de cuidado</p>
+    <button class="btn peligro" data-accion="borrar-ejercicio" data-id="${ej.id}">Quitar de la rutina</button>
+  `;
+
   if (!historial.length) {
-    return volver + titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.<br>Tocá "Entrenar ▶" en la rutina para empezar 💪</p>`;
+    return volver + titulo + `<p class="vacio">Todavía no hay entrenamientos registrados.</p>` + quitar;
   }
 
   const maximos = historial.map(s => s.maxKg).filter(v => v !== null);
@@ -706,6 +729,7 @@ function pantallaProgreso() {
 
     <h3 class="sec-title">Historial</h3>
     <div class="historial">${sesiones}</div>
+    ${quitar}
   `;
 }
 
@@ -842,6 +866,7 @@ document.addEventListener("click", async (evento) => {
       return;
     }
     ejercicios = ejercicios.filter(e => e.id !== id);
+    if (vista === "progreso") vista = "alumno";   // se borró desde su detalle: volvemos a la rutina
     render();
     mostrarToast(`✓ ${ej.nombre} quitado de la rutina`);
   }

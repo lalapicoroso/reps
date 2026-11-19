@@ -60,7 +60,11 @@ function seccionRutinaChips() {
   const dias = Object.keys(grupos);
 
   if (!dias.length) {
-    return `<p class="vacio">Todavía no tiene rutina.<br>Agregá el primer ejercicio 👆</p>`;
+    return `
+      <p class="vacio">Sin rutina todavía.<br>Importá una planilla o armala ejercicio por ejercicio.</p>
+      <button class="btn" data-accion="abrir-importar">Importar planilla</button>
+      <button class="btn secundario" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
+    `;
   }
 
   const sugerido = diaSugerido(dias);
@@ -93,7 +97,6 @@ function seccionRutinaChips() {
         </span>
         <span class="chev">›</span>
       </button>
-      <button class="borrar" data-accion="borrar-ejercicio" data-id="${ej.id}" aria-label="Borrar ${ej.nombre}">✕</button>
     </div>
   `).join("");
 
@@ -102,10 +105,13 @@ function seccionRutinaChips() {
     <div class="chips-dias">${chips}</div>
     <div class="dia-titulo">
       <h3>${nombre}</h3>
-      ${actual === sugerido ? `<span class="le-toca">Le toca hoy</span>` : ""}
+      ${actual === sugerido ? `<span class="le-toca">Hoy</span>` : ""}
     </div>
     <div class="lista">${tarjetas}</div>
-    <button class="btn iniciar" data-accion="entrenar" data-dia="${actual}">Iniciar entrenamiento</button>
+    <button class="btn secundario agregar-final" data-accion="agregar-ejercicio">+ Agregar ejercicio</button>
+    <div class="iniciar-fijo">
+      <button class="btn" data-accion="entrenar" data-dia="${actual}">Iniciar entrenamiento</button>
+    </div>
   `;
 }
 

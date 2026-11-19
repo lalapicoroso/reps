@@ -79,8 +79,7 @@ function tabNutricion(alumno) {
   // Estado vacío
   if (!tieneDatos) {
     return `
-      <p class="vacio">Todavía no tiene objetivos de nutrición.<br>
-      Definilos a mano, o importalos desde la planilla (pestaña <b>Inicio</b>).</p>
+      <p class="vacio">Sin objetivos todavía.<br>Definilos acá o importalos de una planilla.</p>
       <button class="btn" data-accion="editar-nutricion">Definir objetivos</button>
     `;
   }

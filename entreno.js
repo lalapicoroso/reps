@@ -153,7 +153,7 @@ function pantallaEntreno() {
         <p>ÚLTIMA VEZ · ${fechaLarga(anterior[0].fecha).toUpperCase()}</p>
         <strong>${anterior.map(r => `${r.kg ?? "–"}×${r.reps ?? "–"}`).join(" · ")}</strong>
       </div>`
-    : `<div class="ultima-vez"><p>PRIMERA VEZ CON ESTE EJERCICIO 🎉</p></div>`;
+    : `<div class="ultima-vez"><p>PRIMERA VEZ 🎉</p><span class="ultima-ayuda">Elegí una carga que te deje 2-3 reps en reserva.</span></div>`;
 
   // Filas de series: número · kg · reps · ✓
   let filas = "";
@@ -175,12 +175,13 @@ function pantallaEntreno() {
   const hechas = seriesHechas();
   const totalSeries = seriesTotales();
 
+  // < Anterior (no aparece en el primero) · Siguiente > (en el último pasa a "Terminar")
   const botones = `
     <div class="nav-entreno">
-      ${ejercicioIdx > 0 ? `<button class="btn secundario" data-accion="ejercicio-anterior">←</button>` : ""}
+      ${ejercicioIdx > 0 ? `<button class="btn secundario" data-accion="ejercicio-anterior">‹ Anterior</button>` : ""}
       ${esUltimo
-        ? `<button class="btn" data-accion="guardar-sesion">Guardar entrenamiento</button>`
-        : `<button class="btn" data-accion="ejercicio-siguiente">Siguiente: ${siguiente.nombre} →</button>`}
+        ? `<button class="btn" data-accion="pedir-salir">Terminar</button>`
+        : `<button class="btn" data-accion="ejercicio-siguiente" aria-label="Siguiente: ${textoSeguro(siguiente.nombre)}">Siguiente ›</button>`}
     </div>
   `;
 
@@ -210,7 +211,6 @@ function pantallaEntreno() {
         <span id="progreso-texto">${hechas} de ${totalSeries} series</span>
         <div class="barra"><i id="progreso-barra" style="width:${totalSeries ? (hechas / totalSeries) * 100 : 0}%"></i></div>
       </div>
-      <p class="ayuda">Cada serie se marca sola al completar kg y reps. Deslizá ← → para cambiar de ejercicio.</p>
     </div>
     ${pidiendoSalir ? sheetSalir(hechas, totalSeries) : ""}
   `;

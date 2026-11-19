@@ -196,7 +196,7 @@ function agendaHoy() {
   `;
 
   if (!total) {
-    return resumen + `<p class="vacio">Hoy no hay turnos en tu calendario.</p>`;
+    return resumen + `<p class="vacio">Hoy no tenés clases.<br>Buen momento para armar rutinas.</p>`;
   }
 
   // Todos los turnos por horario, mezclando asignados y sin asignar
@@ -214,7 +214,10 @@ function agendaHoy() {
 // ── Actividad reciente: las últimas 3 sesiones ──
 function actividadReciente() {
   if (cargandoActividad && !actividad.length) return `<p class="subtitulo">Cargando actividad…</p>`;
-  if (!actividad.length) return "";
+  if (!actividad.length) return `
+    <h3 class="sec-title">Actividad reciente</h3>
+    <p class="vacio">Acá vas a ver los últimos entrenamientos de tus alumnos.</p>
+  `;
 
   const ultimas = [...actividad]
     .sort((a, b) => b.fecha.localeCompare(a.fecha))
