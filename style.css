@@ -238,14 +238,14 @@ button.card:active { transform: scale(0.98); }  /* feedback al tocar */
   cursor: pointer;
 }
 
-/* Título de cada día */
+/* Títulos de sección ("Actividad reciente", "Por ejercicio", "Historial"…):
+   en oración, con el color del texto, para que no queden flotando */
 .sec-title {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 20px 0 8px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 28px 0 12px;
 }
 
 /* Tarjeta de ejercicio */
@@ -726,7 +726,7 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .agenda-conectar h3 { font-size: 17px; }
 .agenda-conectar p { line-height: 1.45; }
 
-.agenda-top { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 8px; }
+.agenda-top { display: flex; justify-content: space-between; align-items: center; margin: 28px 0 12px; }
 .agenda-top .sec-title { margin: 0; }
 .link.chico { font-size: 13px; padding: 4px 0; color: var(--muted); }
 
@@ -802,7 +802,7 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .acciones-fila .btn-chico { padding: 10px 12px; font-size: 14px; }
 .card.sin-asignar .link.chico { align-self: flex-start; }
 
-.lista + .agenda-top { margin-top: 24px; }
+.lista + .agenda-top { margin-top: 28px; }
 
 /* Toast: aparece abajo, arriba de la tab bar, y se va solo */
 .toast { position: fixed; left: 16px; right: 16px; bottom: 96px; z-index: 30; max-width: 608px; margin: 0 auto; background: var(--surface2); border: 1px solid var(--lime); border-radius: 14px; padding: 14px 16px; font-weight: 700; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); animation: toast 3.2s ease forwards; pointer-events: none; }
@@ -953,3 +953,18 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 /* Ilustraciones de los empty states */
 .ilu { display: block; width: 150px; height: 150px; margin: 24px auto 0; }
 .ilu + .vacio { padding-top: 4px; }
+
+/* Sombra de las ilustraciones: más suave en los temas claros */
+:root { --ilu-sombra: rgba(0, 0, 0, 0.45); }
+@supports (color: light-dark(#000, #fff)) {
+  :root { --ilu-sombra: light-dark(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.45)); }
+}
+
+/* Fases: campo "Duración de la fase" y fecha de fin en Perfil */
+.campo-duracion { display: flex; flex-direction: column; gap: 8px; }
+.campo-duracion .campo-titulo { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.campo-duracion .chips-dias { margin: 0 -16px; }
+.campo-duracion .chip-dia { padding: 9px 12px; font-size: 13px; }
+.campo-duracion .ayuda { margin: 0; }
+.card.info .fase-hasta { margin: 4px 0 0; font-size: 14px; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.card.info .fase-hasta::first-letter { text-transform: uppercase; }

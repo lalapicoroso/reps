@@ -214,10 +214,7 @@ function agendaHoy() {
 // ── Actividad reciente: las últimas 3 sesiones ──
 function actividadReciente() {
   if (cargandoActividad && !actividad.length) return `<p class="subtitulo">Cargando actividad…</p>`;
-  if (!actividad.length) return `
-    <h3 class="sec-title">Actividad reciente</h3>
-    <p class="vacio">Acá vas a ver los últimos entrenamientos de tus alumnos.</p>
-  `;
+  if (!actividad.length) return "";   // sin actividad no mostramos la sección (una sola ilustración por pantalla)
 
   const ultimas = [...actividad]
     .sort((a, b) => b.fecha.localeCompare(a.fecha))
@@ -257,6 +254,7 @@ function pantallaHoy() {
     <h1 class="titulo saludo">${textoSeguro(saludo())}</h1>
     <p class="subtitulo">${fechaDeHoy()}</p>
     ${tarjetaBorrador()}
+    ${tarjetasFaseHoy()}
     ${agendaHoy()}
     ${actividadReciente()}
     ${texto ? `<div class="toast" role="status">${textoSeguro(texto)}</div>` : ""}

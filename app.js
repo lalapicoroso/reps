@@ -487,7 +487,7 @@ function tabPerfil(alumno) {
   return `
     <div class="lista">
       <div class="card info"><div><p>Objetivo</p><h3>${alumno.objetivo || "Sin objetivo todavía"}</h3></div></div>
-      <div class="card info"><div><p>Fase</p><h3>${alumno.fase || "—"}</h3></div></div>
+      <div class="card info"><div><p>Fase</p><h3>${alumno.fase || "—"}</h3>${alumno.fase_hasta ? `<p class="fase-hasta">Hasta el ${fechaLarga(alumno.fase_hasta)}</p>` : ""}</div></div>
     </div>
     <div class="acciones-grupo">
       <button class="btn" data-accion="editar">Editar alumno</button>
@@ -522,6 +522,7 @@ function pantallaAlumno(alumno) {
     </div>
 
     ${aviso ? `<div class="aviso">${aviso}</div>` : ""}
+    ${tarjetaFase(alumno, false)}
 
     ${contenido}
   `;
@@ -537,6 +538,7 @@ function pantallaNuevo() {
         <input name="nombre" required placeholder="Ej: Sofía R.">
       </label>
         <label>Fase <input name="fase" placeholder="Fase 1"></label>
+      ${campoDuracion(null)}
       <label>Objetivo
         <input name="objetivo" placeholder="Ej: Hipertrofia de tren inferior">
       </label>
@@ -556,6 +558,7 @@ function pantallaEditar(alumno) {
         <input name="nombre" required value="${alumno.nombre}">
       </label>
         <label>Fase <input name="fase" value="${alumno.fase || ""}"></label>
+      ${campoDuracion(alumno)}
       <label>Objetivo
         <input name="objetivo" value="${alumno.objetivo || ""}" placeholder="Ej: Hipertrofia de tren inferior">
       </label>
@@ -972,6 +975,11 @@ document.addEventListener("submit", async (evento) => {
 
   const form = evento.target;
   const datos = Object.fromEntries(new FormData(form));
+  // Fecha de fin de la fase: vacía = sin aviso (null en la base)
+  if ("fase_hasta" in datos) {
+    datos.fase_hasta = datos.fase_hasta || null;
+    datos.fase_semanas = datos.fase_semanas ? Number(datos.fase_semanas) : null;
+  }
   const boton = form.querySelector("button[type=submit]");
   const mensaje = form.querySelector(".error");
   const textoOriginal = boton.textContent;
