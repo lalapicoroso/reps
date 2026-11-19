@@ -115,12 +115,12 @@ function tarjetaSinAsignar(t) {
     return `
       <div class="card sin-asignar">
         <h3>${horario} · ${textoSeguro(t.nombre)}</h3>
-        <p>¿Es <strong>${textoSeguro(t.parecido.nombre)}</strong>? Confirmá y el turno queda asignado a su rutina.</p>
+        <p>¿Es <strong>${textoSeguro(t.parecido.nombre)}</strong>? Confirmá y la clase queda asignada a su rutina.</p>
         <div class="acciones-fila">
           <button class="btn-chico" data-accion="asignar-turno" data-clave="${t.clave}" data-id="${t.parecido.id}">Sí, es ${textoSeguro(t.parecido.nombre.split(" ")[0])}</button>
           <button class="btn-chico fantasma" data-accion="crear-desde-agenda" data-nombre="${textoSeguro(t.nombre)}">Es otra persona</button>
         </div>
-        <button class="link chico" data-accion="ignorar-candidato" data-nombre="${textoSeguro(t.nombre)}">Ignorar este turno</button>
+        <button class="link chico" data-accion="ignorar-candidato" data-nombre="${textoSeguro(t.nombre)}">Ignorar esta clase</button>
       </div>
     `;
   }
@@ -150,10 +150,10 @@ function agendaHoy() {
     return `
       <div class="card agenda-actualizar">
         <div>
-          <h3>📅 Turnos de hoy</h3>
+          <h3>📅 Clases de hoy</h3>
           <p>Google pide renovar la conexión cada hora.</p>
         </div>
-        <button class="btn-chico" data-accion="reconectar-google">↻ Actualizar</button>
+        <button class="btn-chico" data-accion="reconectar-google">Actualizar</button>
       </div>
       ${agenda.error ? `<p class="error">${textoSeguro(agenda.error)}</p>` : ""}
     `;
@@ -163,7 +163,7 @@ function agendaHoy() {
     return `
       <div class="card agenda-conectar">
         <div>
-          <h3>📅 Turnos de hoy</h3>
+          <h3>📅 Clases de hoy</h3>
           <p>Conectá tu Google Calendar y Reps te muestra a qué alumnos entrenás hoy.</p>
         </div>
         ${agenda.error ? `<p class="error">${textoSeguro(agenda.error)}</p>` : ""}
@@ -173,7 +173,7 @@ function agendaHoy() {
   }
 
   if (agenda.cargando && !agenda.cargada) {
-    return `<p class="subtitulo">Buscando tus turnos…</p>`;
+    return `<p class="subtitulo">Buscando tus clases…</p>`;
   }
 
   if (agenda.error) {
@@ -190,7 +190,7 @@ function agendaHoy() {
 
   const resumen = `
     <div class="resumen-hoy">
-      <p><strong>${total}</strong> ${total === 1 ? "turno" : "turnos"} hoy</p>
+      <p><strong>${total}</strong> ${total === 1 ? "clase" : "clases"} hoy</p>
       <p><strong>${sinAsignar.length}</strong> sin asignar</p>
     </div>
   `;
@@ -240,7 +240,7 @@ function actividadReciente() {
   return `
     <div class="agenda-top">
       <h3 class="sec-title">Actividad reciente</h3>
-      <button class="link chico" data-accion="ver-actividad">Ver todo →</button>
+      <button class="link chico" data-accion="ver-actividad">Ver todo</button>
     </div>
     <div class="lista">${ultimas}</div>
   `;
@@ -274,7 +274,7 @@ document.addEventListener("click", (evento) => {
     const alumno = alumnos.find(a => a.id === Number(boton.dataset.id));
     asignados[boton.dataset.clave] = alumno.id;
     guardarAsignados();
-    mensajeHoy = `✓ Turno asignado a ${alumno.nombre}`;
+    mensajeHoy = `✓ Clase asignada a ${alumno.nombre}`;
     render();
   }
 

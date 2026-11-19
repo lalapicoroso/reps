@@ -178,10 +178,10 @@ function pantallaEntreno() {
   // < Anterior (no aparece en el primero) · Siguiente > (en el último pasa a "Terminar")
   const botones = `
     <div class="nav-entreno">
-      ${ejercicioIdx > 0 ? `<button class="btn secundario" data-accion="ejercicio-anterior">‹ Anterior</button>` : ""}
+      ${ejercicioIdx > 0 ? `<button class="btn secundario" data-accion="ejercicio-anterior">Anterior</button>` : ""}
       ${esUltimo
         ? `<button class="btn" data-accion="pedir-salir">Terminar</button>`
-        : `<button class="btn" data-accion="ejercicio-siguiente" aria-label="Siguiente: ${textoSeguro(siguiente.nombre)}">Siguiente ›</button>`}
+        : `<button class="btn" data-accion="ejercicio-siguiente" aria-label="Siguiente: ${textoSeguro(siguiente.nombre)}">Siguiente</button>`}
     </div>
   `;
 

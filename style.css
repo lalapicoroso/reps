@@ -944,3 +944,6 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .entreno-objetivo { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; }
 .entreno-objetivo .subtitulo { margin: 0; }
 .entreno-objetivo .pasos-ej { font-size: 12px; font-weight: 800; flex-wrap: wrap; justify-content: flex-end; }
+
+/* Perfil: "Borrar alumno" separado, al final de la pantalla */
+.acciones-final { margin-top: 64px; }

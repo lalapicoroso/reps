@@ -211,7 +211,7 @@ function seccionAgenda() {
     return `
       <div class="card agenda-conectar">
         <div>
-          <h3>📅 Turnos de hoy</h3>
+          <h3>📅 Clases de hoy</h3>
           <p>Conectá tu Google Calendar y Reps te muestra a qué alumnos entrenás hoy.</p>
         </div>
         ${agenda.error ? `<p class="error">${textoSeguro(agenda.error)}</p>` : ""}
@@ -221,7 +221,7 @@ function seccionAgenda() {
   }
 
   if (agenda.cargando) {
-    return `<h3 class="sec-title">Hoy en tu agenda</h3><p class="subtitulo">Buscando tus turnos…</p>`;
+    return `<h3 class="sec-title">Hoy en tu agenda</h3><p class="subtitulo">Buscando tus clases…</p>`;
   }
 
   if (agenda.error) {
@@ -283,11 +283,11 @@ function seccionAgenda() {
 
     ${turnos.length
       ? `<div class="lista">${tarjetasTurnos}</div>`
-      : `<p class="vacio">Hoy no hay turnos con alumnos de Reps.</p>`}
+      : `<p class="vacio">Hoy no hay clases con alumnos de Reps.</p>`}
 
     ${candidatos.length ? `
       <h3 class="sec-title">¿Alumnos nuevos?</h3>
-      <p class="ayuda izq">Estos turnos tienen nombres que todavía no están en Reps.</p>
+      <p class="ayuda izq">Estas clases tienen nombres que todavía no están en Reps.</p>
       <div class="lista">${tarjetasCandidatos}</div>
     ` : ""}
   `;

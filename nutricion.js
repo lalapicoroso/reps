@@ -116,7 +116,7 @@ function tabNutricion(alumno) {
       ${tarjetaTexto("Pasos", alumno.pasos)}
       ${tarjetaTexto("Agua", alumno.agua)}
       ${tarjetaTexto("Notas", alumno.notas_nutricion)}
-      <button class="btn secundario" data-accion="editar-nutricion">✏️ Editar objetivos</button>
+      <button class="btn secundario" data-accion="editar-nutricion">Editar objetivos</button>
     </div>
   `;
 }

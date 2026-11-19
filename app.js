@@ -315,7 +315,7 @@ function pantallaInicio() {
   return `
     ${encabezado()}
     <p class="subtitulo">${alumnos.length} alumnos</p>
-    <button class="btn secundario" data-accion="nuevo">+ Nuevo alumno</button>
+    <button class="btn secundario" data-accion="nuevo">+ Agregar alumno</button>
     ${contenido}
   `;
 }
@@ -492,6 +492,8 @@ function tabPerfil(alumno) {
     <div class="acciones-grupo">
       <button class="btn" data-accion="editar">Editar alumno</button>
       <button class="btn secundario" data-accion="abrir-importar">Importar desde planilla</button>
+    </div>
+    <div class="acciones-final">
       <button class="btn peligro" data-accion="borrar-alumno">Borrar alumno</button>
     </div>
   `;
@@ -660,7 +662,7 @@ function pantallaProgreso() {
   const titulo = `
     <h1 class="titulo">${ej.nombre}</h1>
     <p class="presc-grande">${ej.series} × ${ej.reps || "—"} · ${ej.dia}</p>
-    <button class="link editar-ej" data-accion="editar-ejercicio">✏️ Editar ejercicio</button>
+    <button class="link editar-ej" data-accion="editar-ejercicio">Editar ejercicio</button>
   `;
 
   if (cargandoHistorial) {
