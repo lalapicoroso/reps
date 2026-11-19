@@ -766,7 +766,9 @@ function render() {
 function actualizarProgreso() {
   const hechas = seriesHechas();
   const total = seriesTotales();
-  document.getElementById("progreso-texto").textContent = `${hechas} de ${total} series`;
+  const texto = document.getElementById("progreso-texto");
+  if (!texto) return;   // la pantalla nueva de entreno ya no muestra la barra
+  texto.textContent = `${hechas} de ${total} series`;
   document.getElementById("progreso-barra").style.width = `${total ? (hechas / total) * 100 : 0}%`;
 }
 

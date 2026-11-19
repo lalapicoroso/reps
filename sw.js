@@ -3,7 +3,7 @@
 // Siempre le pregunta al servidor "¿hay algo nuevo?" (no-cache).
 // Si no hay señal, usa la copia guardada.
 // ─────────────────────────────────────────
-const CACHE = "reps-v45";   // al cambiar este nombre, se borran las copias viejas
+const CACHE = "reps-v46";   // al cambiar este nombre, se borran las copias viejas
 
 const ARCHIVOS = [
   "./",

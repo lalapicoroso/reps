@@ -190,11 +190,13 @@ function pantallaEntreno() {
     <div class="entreno" id="entreno">
       <div class="entreno-contexto">
         <span>${contexto}</span>
-        <span class="pasos-ej"><b>${ejercicioIdx + 1} / ${total}</b>${pasos}</span>
       </div>
 
       <h1 class="titulo">${ej.nombre}</h1>
-      <p class="subtitulo">Objetivo: ${ej.series} × ${ej.reps || "—"}</p>
+      <div class="entreno-objetivo">
+        <p class="subtitulo">Objetivo: ${ej.series} × ${ej.reps || "—"}</p>
+        <span class="pasos-ej"><b>${ejercicioIdx + 1} / ${total}</b>${pasos}</span>
+      </div>
 
       ${ultimaVezHtml}
 
@@ -206,11 +208,6 @@ function pantallaEntreno() {
       </div>
 
       ${botones}
-
-      <div class="progreso-chico">
-        <span id="progreso-texto">${hechas} de ${totalSeries} series</span>
-        <div class="barra"><i id="progreso-barra" style="width:${totalSeries ? (hechas / totalSeries) * 100 : 0}%"></i></div>
-      </div>
     </div>
     ${pidiendoSalir ? sheetSalir(hechas, totalSeries) : ""}
   `;
