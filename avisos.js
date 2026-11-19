@@ -16,7 +16,7 @@ function mostrarToast(texto) {
   toast.textContent = texto;
   document.body.appendChild(toast);
 
-  setTimeout(() => toast.remove(), 3300);
+  setTimeout(() => toast.remove(), 4100);
 }
 
 // ── Sheet de confirmación ──

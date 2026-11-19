@@ -24,6 +24,7 @@ function guardarAsignados() {
 async function abrirHoy() {
   vista = "actividad";
   await cargarAlumnos();          // primero los alumnos: los turnos se buscan por nombre
+  if (typeof preguntarNombreSiFalta === "function") preguntarNombreSiFalta();
   cargarActividad();
   if (tokenGoogle) cargarAgenda();
 }
@@ -250,7 +251,7 @@ function pantallaHoy() {
   agenda.mensaje = "";
 
   return `
-    <h1 class="titulo">Hoy</h1>
+    <h1 class="titulo saludo">${textoSeguro(saludo())}</h1>
     <p class="subtitulo">${fechaDeHoy()}</p>
     ${tarjetaBorrador()}
     ${agendaHoy()}

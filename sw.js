@@ -20,6 +20,7 @@ const ARCHIVOS = [
   "entreno.js",
   "avisos.js",
   "registros.js",
+  "personalidad.js",
   "manifest.webmanifest",
   "icons/icon-192.png",
 ];

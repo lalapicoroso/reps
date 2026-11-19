@@ -902,3 +902,17 @@ button.ej-info:hover .chev { color: var(--lime); transform: translateX(2px); }
 .card.agenda-actualizar h3 { margin: 0; font-size: 16px; }
 .card.agenda-actualizar p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
 .card.agenda-actualizar .btn-chico { flex: none; padding: 10px 14px; }
+/* ── Login con video ── */
+.login-fondo { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #000; }
+.login-fondo video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.login-fondo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.1) 30%, rgba(0,0,0,.55) 55%, var(--bg) 82%); }
+.login { position: relative; z-index: 1; max-width: 400px; margin: 0 auto; min-height: calc(100dvh - 40px); display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
+.marca { margin: 8px 0 0; font-size: 84px; line-height: 0.85; font-weight: 900; letter-spacing: -0.03em; color: var(--lime); display: flex; align-items: flex-start; gap: 6px; }
+.marca i { width: 16px; height: 16px; background: var(--lime); border-radius: 4px; transform: rotate(45deg); margin-top: 10px; }
+.lema { margin: 12px 0 0; font-size: 17px; font-weight: 700; color: #fff; }
+.login .form label { color: rgba(255, 255, 255, 0.7); }
+@media (prefers-reduced-motion: reduce) {
+  .login-fondo video { display: none; }
+  .login-fondo { background: #000 url("video/login.jpg") center / cover; }
+}
+.sheet .form input { width: 100%; }

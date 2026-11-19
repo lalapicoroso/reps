@@ -265,9 +265,15 @@ function segmentado() {
 // ─────────────────────────────────────────
 function pantallaLogin() {
   return `
+    <div class="login-fondo" aria-hidden="true">
+      <video src="video/login.mp4" poster="video/login.jpg" autoplay muted loop playsinline></video>
+    </div>
+
     <div class="login">
-      <div class="logo"><i></i>REPS</div>
-      <p class="subtitulo">Entrá con tu cuenta de trainer</p>
+      <div>
+        <h1 class="marca">REPS<i></i></h1>
+        <p class="lema">Cada serie cuenta.</p>
+      </div>
 
       <form id="form-login" class="form">
         <label>Email
@@ -373,8 +379,12 @@ function pantallaAjustes() {
     <h1 class="titulo">Ajustes</h1>
     <div class="lista">
       <div class="card info"><div><p>Cuenta</p><h3 class="email">${usuario ? usuario.email : ""}</h3></div></div>
-          <button class="card info fila-link" type="button" data-accion="abrir-apariencia">
-        <div><p>Apariencia</p><h3>${TEMAS[temaActual].nombre}</h3></div>
+      <button class="card info fila-link" type="button" data-accion="editar-nombre">
+      <div><p>Tu nombre</p><h3>${nombreTrainer() || "Agregalo para el saludo"}</h3></div>
+        <span class="chev">›</span>
+      </button>
+      <button class="card info fila-link" type="button" data-accion="abrir-apariencia">
+      <div><p>Apariencia</p><h3>${TEMAS[temaActual].nombre}</h3></div>
         <span class="chev">›</span>
       </button>
       <div class="card info"><div><p>Alumnos</p><h3>${alumnos.length}</h3></div></div>
